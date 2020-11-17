@@ -1,16 +1,9 @@
 interface CreepMemory {
+  sourceId: null | string;
   role: string;
-  room: string;
   working: boolean;
 }
-interface RoomMemory {
-  sourcesInfo: RoomSourceInfo[];
-}
-interface RoomSourceInfo {
-  id: string;
-  maxWorkers: number;
-  workerNames: string[];
-}
+
 interface SpawnMemory {
   spawning: {
     role: string;
@@ -19,9 +12,26 @@ interface SpawnMemory {
   };
 }
 
+interface RoomMemory {
+  baseLinkId: null | Id<StructureLink>;
+}
+
+interface SourceInfo {
+  isActive: boolean;
+  excavatorName: null | string;
+  maxTrackMoveParts: number;
+  truckNames: string[];
+  linkId: null | Id<StructureLink>;
+  pos: { x: number; y: number; roomName: string };
+}
+
 interface Memory {
+  shouldDraw: boolean;
   uuid: number;
   log: any;
+  sources: {
+    [id: string]: SourceInfo;
+  };
 }
 
 declare namespace NodeJS {

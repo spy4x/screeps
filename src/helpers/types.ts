@@ -1,6 +1,8 @@
 export enum WorkerRoles {
-  harvester = 'harvester',
   builder = 'builder',
   upgrader = 'upgrader',
-  repairer = 'repairer'
+  excavator = 'excavator',
+  truck = 'truck',
+  balancer = 'balancer',
+  scout = 'scout'
 }
