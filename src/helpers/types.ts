@@ -6,5 +6,6 @@ export enum WorkerRoles {
   balancer = 'balancer',
   scout = 'scout',
   towerDrainer = 'towerDrainer',
-  attacker = 'attacker'
+  attacker = 'attacker',
+  dummy = 'dummy'
 }

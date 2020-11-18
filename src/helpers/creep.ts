@@ -19,6 +19,8 @@ export function getRoleShortName(role: WorkerRoles): string {
       return '🏇';
     case WorkerRoles.attacker:
       return '⚔️';
+    case WorkerRoles.dummy:
+      return '😱';
   }
 }
 
@@ -55,6 +57,8 @@ function getPathColorForRole(role: WorkerRoles): string {
       return '#FF0000'; // red
     case WorkerRoles.attacker:
       return '#FF0000'; // red
+    case WorkerRoles.dummy:
+      return '#00ffd9'; // cyan
   }
 }
 
@@ -66,10 +70,12 @@ export function harvest(creep: Creep, source: Source): void {
 
 export function moveTo(
   creep: Creep,
-  target: RoomPosition | { pos: RoomPosition }
+  target: RoomPosition | { pos: RoomPosition },
+  opts?: MoveToOpts
 ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
   return creep.moveTo(target, {
-    visualizePathStyle: { stroke: getPathColorForRole(creep.memory.role as WorkerRoles), opacity: 0.8 }
+    visualizePathStyle: { stroke: getPathColorForRole(creep.memory.role as WorkerRoles), opacity: 0.8 },
+    ...opts
   });
 }
 

@@ -28,9 +28,7 @@ export class Link {
     }
 
     const transferEnergyResult = this.link.transferEnergy(baseLink);
-    if (transferEnergyResult === OK) {
-      console.log(`Link ${this.link.id} transferred energy to base link ${baseLink.id} successfully.`);
-    } else {
+    if (transferEnergyResult !== OK) {
       console.log(`Link ${this.link.id} transfer energy to ${baseLink.id} failed. ERR: ${transferEnergyResult}`);
     }
   }

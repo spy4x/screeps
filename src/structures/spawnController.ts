@@ -9,6 +9,7 @@ import { WorkerRoles } from '../helpers/types';
 import { CreepScout } from '../creeps/scout';
 import { CreepTowerDrainer } from '../creeps/towerDrainer';
 import { CreepAttacker } from '../creeps/attacker';
+import { CreepDummy } from '../creeps/dummy';
 
 export class SpawnController {
   private drawService = new DrawService(this.spawn.room, this.spawn.pos, 1, 0, {
@@ -55,6 +56,8 @@ export class SpawnController {
         this.create(CreepTowerDrainer.role, CreepTowerDrainer.getBodyParts, CreepTowerDrainer.getMemory);
       } else if (CreepAttacker.isNeedOfMore(this.spawn.room)) {
         this.create(CreepAttacker.role, CreepAttacker.getBodyParts, CreepAttacker.getMemory);
+      } else if (CreepDummy.isNeedOfMore(this.spawn.room)) {
+        this.create(CreepDummy.role, CreepDummy.getBodyParts, CreepDummy.getMemory);
       } else {
         // nothing to create
       }

@@ -13,6 +13,7 @@ import { WorkerRoles } from './helpers/types';
 import { CreepScout } from './creeps/scout';
 import { CreepTowerDrainer } from './creeps/towerDrainer';
 import { CreepAttacker } from './creeps/attacker';
+import { CreepDummy } from './creeps/dummy';
 
 if (!Game.rooms.sim) {
   console.log('------- COLD START --------');
@@ -125,6 +126,8 @@ function runCreep(creep: Creep): void {
       return new CreepTowerDrainer(creep).run();
     case WorkerRoles.attacker:
       return new CreepAttacker(creep).run();
+    case WorkerRoles.dummy:
+      return new CreepDummy(creep).run();
   }
 }
 

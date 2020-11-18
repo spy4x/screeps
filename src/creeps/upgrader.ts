@@ -19,8 +19,10 @@ export class CreepUpgrader extends BaseCreep {
     if (!room.controller) {
       return false;
     }
-    const doesCreepExist = !!room.find(FIND_MY_CREEPS, { filter: c => c.memory.role === CreepUpgrader.role }).length;
-    return !doesCreepExist;
+    const isLackingCreeps =
+      room.find(FIND_MY_CREEPS, { filter: c => c.memory.role === CreepUpgrader.role }).length <
+      room.find(FIND_MY_SPAWNS)[0]?.pos.findPathTo(room.controller).length / 12;
+    return isLackingCreeps;
   }
 
   public static getMemory(): CreepMemory {

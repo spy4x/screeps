@@ -9,10 +9,10 @@ export class CreepAttacker extends BaseCreep {
   }
 
   public static isNeedOfMore(room: Room): boolean {
-    return false;
-    // const roomLvLEnough = room.controller!.level >= 5;
-    // const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepAttacker.role).length < 6;
-    // return roomLvLEnough && notEnoughCreeps && !!Game.flags[CreepAttacker.role];
+    // return false;
+    const roomLvLEnough = room.controller!.level >= 5;
+    const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepAttacker.role).length < 1;
+    return roomLvLEnough && notEnoughCreeps && !!Game.flags[CreepAttacker.role];
   }
 
   public static getMemory(room: Room): CreepMemory {
@@ -48,6 +48,7 @@ export class CreepAttacker extends BaseCreep {
           filter: c => c.body.find(b => b.type === ATTACK || b.type === RANGED_ATTACK)
         }) ||
         this.findTargetStructure(STRUCTURE_TOWER) ||
+        this.creep.pos.findClosestByPath(FIND_HOSTILE_CREEPS) ||
         this.findTargetStructure(STRUCTURE_SPAWN) ||
         this.findTargetStructure(STRUCTURE_STORAGE) ||
         this.findTargetStructure(STRUCTURE_EXTENSION) ||
@@ -55,15 +56,10 @@ export class CreepAttacker extends BaseCreep {
         this.findTargetStructure();
       if (target) {
         if (this.creep.attack(target) === ERR_NOT_IN_RANGE) {
-          moveTo(this.creep, target);
+          moveTo(this.creep, target, { reusePath: 1 });
         }
       } else {
-        if (flag.room?.name === this.creep.memory.sourceId) {
-          moveTo(this.creep, flag);
-          return;
-        } else {
-          this.returnHome();
-        }
+        moveTo(this.creep, flag);
       }
     } else {
       moveTo(this.creep, flag);
@@ -71,10 +67,10 @@ export class CreepAttacker extends BaseCreep {
   }
 
   private findTargetStructure(structureType?: string): null | Structure {
-    const opts = {
-      filter: (s: Structure) => s.structureType === structureType
-    };
-    return this.creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, structureType ? opts : undefined);
+    return this.creep.pos.findClosestByPath(FIND_HOSTILE_STRUCTURES, {
+      filter: (s: Structure) =>
+        structureType ? s.structureType === structureType : s.structureType !== STRUCTURE_CONTROLLER
+    });
   }
 
   private returnHome() {
@@ -84,7 +80,7 @@ export class CreepAttacker extends BaseCreep {
         this.creep.room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_TOWER })[0]
       );
     } else {
-      moveTo(this.creep, new RoomPosition(20, 20, this.creep.memory.sourceId!));
+      moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.sourceId!));
     }
   }
 }

@@ -15,7 +15,7 @@ export class CreepBalancer extends BaseCreep {
   }
 
   public static isNeedOfMore(room: Room): boolean {
-    const noOtherBalancer = !Object.values(Game.creeps).filter(c => c.memory.role === CreepBalancer.role).length;
+    const notEnoughCreeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBalancer.role).length < 1;
     const storageExists =
       !!room.find(FIND_MY_STRUCTURES, {
         filter: s => s.structureType === STRUCTURE_STORAGE
@@ -23,9 +23,9 @@ export class CreepBalancer extends BaseCreep {
       !!room.find(FIND_STRUCTURES, {
         filter: s => s.structureType === STRUCTURE_CONTAINER
       }).length;
-    const result = noOtherBalancer && storageExists;
+    const result = notEnoughCreeps && storageExists;
     if (result) {
-      console.log(`Balancer needed:`, JSON.stringify({ noOtherBalancer, storageExists }));
+      console.log(`Balancer needed:`, JSON.stringify({ noOtherBalancer: notEnoughCreeps, storageExists }));
     }
     return result;
   }
@@ -66,15 +66,6 @@ export class CreepBalancer extends BaseCreep {
       }
       // find a silo to take from
 
-      const tombstone = this.creep.pos.findInRange(FIND_TOMBSTONES, 15, { filter: t => t.store.energy })[0];
-      if (tombstone) {
-        this.say(`☠️`);
-        if (this.creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-          moveTo(this.creep, tombstone);
-        }
-        return;
-      }
-
       const droppedResource = this.creep.pos.findInRange(FIND_DROPPED_RESOURCES, 3)[0];
       if (droppedResource) {
         this.say('💎');
@@ -85,14 +76,23 @@ export class CreepBalancer extends BaseCreep {
         return;
       }
 
-      const ruin = this.creep.pos.findInRange(FIND_RUINS, 10, { filter: t => t.store.energy })[0];
-      if (ruin) {
-        this.say(`🏚️`);
-        if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-          moveTo(this.creep, ruin);
+      const tombstone = this.creep.pos.findInRange(FIND_TOMBSTONES, 5, { filter: t => t.store.energy })[0];
+      if (tombstone) {
+        this.say(`☠️`);
+        if (this.creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+          moveTo(this.creep, tombstone);
         }
         return;
       }
+
+      // const ruin = this.creep.pos.findInRange(FIND_RUINS, 5, { filter: t => t.store.energy })[0];
+      // if (ruin) {
+      //   this.say(`🏚️`);
+      //   if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+      //     moveTo(this.creep, ruin);
+      //   }
+      //   return;
+      // }
 
       if (!somethingToFill) {
         this.say('💤');

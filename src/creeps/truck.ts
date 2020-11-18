@@ -53,7 +53,11 @@ export class CreepTruck extends BaseCreep {
       if (transferResult === ERR_NOT_IN_RANGE) {
         moveTo(this.creep, silo);
       } else if (transferResult === OK) {
-        this.get$FromSource();
+        if (this.creep.store.getUsedCapacity() === 0) {
+          this.get$FromSource();
+        } /* else {
+          this.get$ToBase();
+        }*/
       }
     } else {
       this.say('⚠️');

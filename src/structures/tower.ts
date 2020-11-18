@@ -1,4 +1,5 @@
 import { getRepairTarget } from '../helpers/repair';
+import { WorkerRoles } from '../helpers/types';
 
 export class Tower {
   public constructor(public tower: StructureTower) {}
@@ -11,7 +12,7 @@ export class Tower {
     }
 
     const creepToHeal = this.tower.pos.findClosestByRange(FIND_MY_CREEPS, {
-      filter: creep => creep.hits < creep.hitsMax
+      filter: creep => creep.hits < creep.hitsMax && creep.memory.role !== WorkerRoles.towerDrainer
     });
     if (creepToHeal) {
       this.tower.heal(creepToHeal);

@@ -17,7 +17,7 @@ export class CreepScout extends BaseCreep {
   public static getMemory(): CreepMemory {
     return {
       role: CreepScout.role,
-      sourceId: 'E48N24',
+      sourceId: 'E49N25',
       working: false
     };
   }
@@ -32,13 +32,32 @@ export class CreepScout extends BaseCreep {
       this.say('⚠️');
       return;
     }
+    const controller = this.creep.room.controller!;
+
     if (this.creep.room.name === roomName) {
-      moveTo(this.creep, this.creep.room.controller!);
-      if (this.creep.claimController(this.creep.room.controller!) === ERR_NOT_IN_RANGE) {
-        moveTo(this.creep, this.creep.room.controller!);
+      moveTo(this.creep, controller);
+      if (controller.owner && !controller.my) {
+        const attackControllerResult = this.creep.attackController(controller);
+        if (attackControllerResult === ERR_NOT_IN_RANGE) {
+          moveTo(this.creep, controller);
+        } else if (attackControllerResult !== ERR_TIRED && attackControllerResult !== OK) {
+          console.log(`Scout: attack result: ${attackControllerResult}`);
+        }
+      } else {
+        const claimControllerResult = this.creep.claimController(controller);
+        if (claimControllerResult === ERR_NOT_IN_RANGE) {
+          moveTo(this.creep, controller);
+        } else if (claimControllerResult === ERR_GCL_NOT_ENOUGH) {
+          if (this.creep.reserveController(controller) === ERR_NOT_IN_RANGE) {
+            moveTo(this.creep, controller);
+          }
+        } else {
+          console.log(`Scout: claim result: ${claimControllerResult}`);
+        }
       }
     } else {
-      moveTo(this.creep, new RoomPosition(1, 1, roomName));
+      this.say('🏇️');
+      moveTo(this.creep, new RoomPosition(20, 20, roomName));
     }
   }
 }

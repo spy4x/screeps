@@ -19,9 +19,9 @@ export class CreepBuilder extends BaseCreep {
     // TODO: idea - build queue - use command to setup a construction spot that will add info about it to an array
     //  that array will be checked by builders as next goal to build
     const isSomethingToBuild = !!room.find(FIND_MY_CONSTRUCTION_SITES).length;
-    const doesCreepExist = !!Object.values(Game.creeps).filter(c => c.memory.role === CreepBuilder.role).length;
+    const isLackingCreeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBuilder.role).length < 1;
 
-    return !doesCreepExist && isSomethingToBuild;
+    return isLackingCreeps && isSomethingToBuild;
   }
 
   public static getMemory(): CreepMemory {
