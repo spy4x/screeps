@@ -4,5 +4,7 @@ export enum WorkerRoles {
   excavator = 'excavator',
   truck = 'truck',
   balancer = 'balancer',
-  scout = 'scout'
+  scout = 'scout',
+  towerDrainer = 'towerDrainer',
+  attacker = 'attacker'
 }

@@ -1,4 +1,4 @@
-import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
+import { GetBodyParts, BaseCreep, moveTo } from '../helpers/creep';
 import { pickup } from '../helpers/creep+pickup';
 import { WorkerRoles } from '../helpers/types';
 
@@ -12,18 +12,15 @@ export class CreepUpgrader extends BaseCreep {
   public static getBodyParts(room: Room): GetBodyParts {
     const base = [MOVE, CARRY, WORK];
     const extra = [CARRY, WORK, WORK, WORK];
-    return { base, extra, maxExtra: (MAX_CREEP_SIZE - base.length) / extra.length };
+    return { base, extra, maxExtra: MAX_CREEP_SIZE };
   }
 
   public static isNeedOfMore(room: Room): boolean {
     if (!room.controller) {
       return false;
     }
-    const totalAmountIsNotEnough =
-      Object.values(Game.creeps).filter(c => c.memory.role === CreepUpgrader.role).length < 2;
-    const roomAmountIsNotEnough =
-      room.find(FIND_MY_CREEPS, { filter: c => c.memory.role === CreepUpgrader.role }).length < 1;
-    return totalAmountIsNotEnough && roomAmountIsNotEnough;
+    const doesCreepExist = !!room.find(FIND_MY_CREEPS, { filter: c => c.memory.role === CreepUpgrader.role }).length;
+    return !doesCreepExist;
   }
 
   public static getMemory(): CreepMemory {

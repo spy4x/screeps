@@ -7,6 +7,8 @@ import { CreepUpgrader } from '../creeps/upgrader';
 import { DrawService } from '../helpers/draw.service';
 import { WorkerRoles } from '../helpers/types';
 import { CreepScout } from '../creeps/scout';
+import { CreepTowerDrainer } from '../creeps/towerDrainer';
+import { CreepAttacker } from '../creeps/attacker';
 
 export class SpawnController {
   private drawService = new DrawService(this.spawn.room, this.spawn.pos, 1, 0, {
@@ -37,11 +39,11 @@ export class SpawnController {
         ).toUpperCase()} 💲${cost} 💪${SpawnController.getBodyPartsDescription(bodyParts)}`
       );
     } else {
-      if (CreepTruck.isNeedOfMore()) {
+      if (CreepTruck.isNeedOfMore(this.spawn.room)) {
         this.create(CreepTruck.role, CreepTruck.getBodyParts, CreepTruck.getMemory);
-      } else if (CreepExcavator.isNeedOfMore()) {
+      } else if (CreepExcavator.isNeedOfMore(this.spawn.room)) {
         this.create(CreepExcavator.role, CreepExcavator.getBodyParts, CreepExcavator.getMemory);
-      } else if (CreepBuilder.isNeedOfMore()) {
+      } else if (CreepBuilder.isNeedOfMore(this.spawn.room)) {
         this.create(CreepBuilder.role, CreepBuilder.getBodyParts, CreepBuilder.getMemory);
       } else if (CreepBalancer.isNeedOfMore(this.spawn.room)) {
         this.create(CreepBalancer.role, CreepBalancer.getBodyParts, CreepBalancer.getMemory);
@@ -49,6 +51,10 @@ export class SpawnController {
         this.create(CreepUpgrader.role, CreepUpgrader.getBodyParts, CreepUpgrader.getMemory);
       } else if (CreepScout.isNeedOfMore()) {
         this.create(CreepScout.role, CreepScout.getBodyParts, CreepScout.getMemory);
+      } else if (CreepTowerDrainer.isNeedOfMore(this.spawn.room)) {
+        this.create(CreepTowerDrainer.role, CreepTowerDrainer.getBodyParts, CreepTowerDrainer.getMemory);
+      } else if (CreepAttacker.isNeedOfMore(this.spawn.room)) {
+        this.create(CreepAttacker.role, CreepAttacker.getBodyParts, CreepAttacker.getMemory);
       } else {
         // nothing to create
       }
@@ -72,14 +78,18 @@ export class SpawnController {
     return `${result}`;
   }
 
-  private create(role: WorkerRoles, getBodyPartsFn: (room: Room) => GetBodyParts, getMemoryFn: () => any): void {
+  private create(
+    role: WorkerRoles,
+    getBodyPartsFn: (room: Room) => GetBodyParts,
+    getMemoryFn: (room: Room) => any
+  ): void {
     const name = createName(role);
     const energyAvailable = this.spawn.room.energyAvailable; // TODO: replace with energyCapacity to produce better
     // quality creeps rather than quantity
     const bodyParts = this.addExtraBodyParts(getBodyPartsFn(this.spawn.room), energyAvailable);
     const cost = SpawnController.getCreepCost(bodyParts);
     // @ts-ignore
-    const spawnCreepResult = this.spawn.spawnCreep(bodyParts, name, { memory: getMemoryFn() });
+    const spawnCreepResult = this.spawn.spawnCreep(bodyParts, name, { memory: getMemoryFn(this.spawn.room) });
     switch (spawnCreepResult) {
       case OK:
         this.spawn.memory.spawning = { role, bodyParts, cost };
@@ -103,7 +113,15 @@ export class SpawnController {
       extraPartsAmount = prototypeBodyPartsInfo.maxExtra;
     }
     const extraParts = new Array(extraPartsAmount).fill(prototypeBodyPartsInfo.extra).flat() as BodyPartConstant[];
-    return [...prototypeBodyPartsInfo.base, ...extraParts].slice(0, MAX_CREEP_SIZE);
+    return [...prototypeBodyPartsInfo.base, ...extraParts].slice(0, MAX_CREEP_SIZE).sort((a, b) => {
+      if (a === TOUGH) {
+        return -1;
+      }
+      if (a === MOVE) {
+        return 1;
+      }
+      return 0;
+    });
   }
 }
 

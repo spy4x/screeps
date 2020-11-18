@@ -139,19 +139,24 @@ export class CreepBalancer extends BaseCreep {
   }
 
   private getSomethingToFill(): null | Structure {
-    return this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: structure => {
-        const isStore =
-          structure.structureType === STRUCTURE_SPAWN ||
-          structure.structureType === STRUCTURE_EXTENSION ||
-          structure.structureType === STRUCTURE_TOWER;
-        return (
-          isStore &&
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-          (structure as any).store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        );
-      }
-    });
+    return (
+      this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: structure =>
+          structure.structureType === STRUCTURE_TOWER &&
+          (structure.store.energy * 100) / structure.store.getCapacity(RESOURCE_ENERGY) < 80
+      }) ||
+      this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: structure => {
+          const isStore =
+            structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION;
+          return (
+            isStore &&
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+            (structure as any).store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          );
+        }
+      })
+    );
   }
 
   private dropToStorage(): void {

@@ -3,6 +3,8 @@ import { DrawService } from './draw.service';
 
 export function getRoleShortName(role: WorkerRoles): string {
   switch (role) {
+    case WorkerRoles.towerDrainer:
+      return '😅';
     case WorkerRoles.builder:
       return '👷';
     case WorkerRoles.upgrader:
@@ -15,6 +17,8 @@ export function getRoleShortName(role: WorkerRoles): string {
       return '⚖️';
     case WorkerRoles.scout:
       return '🏇';
+    case WorkerRoles.attacker:
+      return '⚔️';
   }
 }
 
@@ -47,7 +51,9 @@ function getPathColorForRole(role: WorkerRoles): string {
       return '#00ffd9'; // cyan
     case WorkerRoles.scout:
       return '#a87332'; // orange
-    default:
+    case WorkerRoles.towerDrainer:
+      return '#FF0000'; // red
+    case WorkerRoles.attacker:
       return '#FF0000'; // red
   }
 }
@@ -87,21 +93,19 @@ export function getClosestSource(
 }
 
 export function findSilo(creep: Creep): null | Structure {
-  return (
-    creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: structure => {
-        const isStore =
-          structure.structureType === STRUCTURE_EXTENSION ||
-          structure.structureType === STRUCTURE_SPAWN ||
-          structure.structureType === STRUCTURE_TOWER ||
-          structure.structureType === STRUCTURE_STORAGE ||
-          structure.structureType === STRUCTURE_CONTAINER;
-        const isSourceContainer =
-          structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
-        return isStore && !isSourceContainer && (structure as any).store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-      }
-    }) || (Object.values(Game.spawns)[0].room.storage as Structure)
-  );
+  return creep.pos.findClosestByPath(FIND_STRUCTURES, {
+    filter: structure => {
+      const isStore =
+        structure.structureType === STRUCTURE_EXTENSION ||
+        structure.structureType === STRUCTURE_SPAWN ||
+        structure.structureType === STRUCTURE_TOWER ||
+        structure.structureType === STRUCTURE_STORAGE ||
+        structure.structureType === STRUCTURE_CONTAINER;
+      const isSourceContainer =
+        structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
+      return isStore && !isSourceContainer && (structure as any).store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+    }
+  });
 }
 
 export interface GetBodyParts {
@@ -120,7 +124,7 @@ export class BaseCreep {
   public static isNeedOfMore(room: Room): boolean {
     return true;
   }
-  public static getMemory(): CreepMemory {
+  public static getMemory(room: Room): CreepMemory {
     return {
       role: WorkerRoles.truck,
       sourceId: null,

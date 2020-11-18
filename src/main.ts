@@ -11,6 +11,8 @@ import { SpawnController } from './structures/spawnController';
 import { Tower } from './structures/tower';
 import { WorkerRoles } from './helpers/types';
 import { CreepScout } from './creeps/scout';
+import { CreepTowerDrainer } from './creeps/towerDrainer';
+import { CreepAttacker } from './creeps/attacker';
 
 if (!Game.rooms.sim) {
   console.log('------- COLD START --------');
@@ -89,7 +91,7 @@ function createMemorySourcesIfNeeded(): void {
       console.log(`Saving new source to memory`, JSON.stringify(source, null, 2));
 
       const spawn = source.pos.findClosestByRange(FIND_MY_SPAWNS);
-      const maxTrackMoveParts = spawn ? Math.ceil(spawn.pos.findPathTo(source).length / 4) || 1 : 20;
+      const maxTrackMoveParts = spawn ? Math.ceil(spawn.pos.findPathTo(source).length / 4) || 1 : 12;
 
       Memory.sources[source.id] = {
         pos: source.pos,
@@ -119,8 +121,10 @@ function runCreep(creep: Creep): void {
       return new CreepBalancer(creep).run();
     case WorkerRoles.scout:
       return new CreepScout(creep).run();
-    default:
-      return console.log(`UNRECOGNISED ROLE: ${role}. Creep: ${creep.name}`);
+    case WorkerRoles.towerDrainer:
+      return new CreepTowerDrainer(creep).run();
+    case WorkerRoles.attacker:
+      return new CreepAttacker(creep).run();
   }
 }
 

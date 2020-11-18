@@ -8,11 +8,13 @@ export class CreepExcavator extends BaseCreep {
     super(creep);
   }
 
-  public static isNeedOfMore(): boolean {
-    return !!Object.keys(Memory.sources).find(sourceId => {
-      const sourceInfo = Memory.sources[sourceId];
-      return sourceInfo.isActive && !sourceInfo.excavatorName;
-    });
+  public static isNeedOfMore(room: Room): boolean {
+    return !!room.find(FIND_SOURCES, {
+      filter: s => {
+        const si = Memory.sources[s.id];
+        return si.isActive && !si.excavatorName;
+      }
+    }).length;
   }
 
   public static getMemory(): CreepMemory {
@@ -38,28 +40,26 @@ export class CreepExcavator extends BaseCreep {
     }
     this.pickup();
     this.drop();
-    harvest(this.creep, Game.getObjectById(this.creep.memory.sourceId as Id<Source>)!);
+    harvest(this.creep, source);
     this.drop();
     this.pickup();
   }
 
-  private getSource(): null | SourceInfo {
+  private getSource(): null | Source {
     if (this.creep.memory.sourceId) {
-      return Memory.sources[this.creep.memory.sourceId];
-    } else {
-      const sourceId = Object.keys(Memory.sources).find(sid => {
-        const sourceInfo = Memory.sources[sid];
-        return sourceInfo.isActive && !sourceInfo.excavatorName;
-      });
-      if (sourceId) {
-        this.creep.memory.sourceId = sourceId;
-        Memory.sources[sourceId].excavatorName = this.creep.name;
-        return Memory.sources[sourceId];
-      } else {
-        console.log(`Excavator ${this.creep.name} couldn't find source`);
-        return null;
-      }
+      return Game.getObjectById(this.creep.memory.sourceId);
     }
+
+    const source = getClosestSource(this.creep, si => si.isActive && !si.excavatorName);
+
+    if (source) {
+      this.creep.memory.sourceId = source.id;
+      Memory.sources[source.id].excavatorName = this.creep.name;
+    } else {
+      console.log(`Excavator ${this.creep.name} couldn't find source`);
+    }
+
+    return source;
   }
 
   private drop(): void {

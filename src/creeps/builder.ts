@@ -12,15 +12,16 @@ export class CreepBuilder extends BaseCreep {
   public static getBodyParts(): GetBodyParts {
     const base = [MOVE, CARRY, WORK];
     const extra = base;
-    return { base, extra, maxExtra: 5 };
+    return { base, extra, maxExtra: MAX_CREEP_SIZE };
   }
 
-  public static isNeedOfMore(): boolean {
+  public static isNeedOfMore(room: Room): boolean {
     // TODO: idea - build queue - use command to setup a construction spot that will add info about it to an array
     //  that array will be checked by builders as next goal to build
-    const doesCreepExist = Object.values(Game.creeps).filter(c => c.memory.role === CreepBuilder.role).length >= 1;
-    const doesSiteExist = !!Object.values(Game.rooms).find(room => !!room.find(FIND_MY_CONSTRUCTION_SITES).length);
-    return !doesCreepExist && doesSiteExist;
+    const isSomethingToBuild = !!room.find(FIND_MY_CONSTRUCTION_SITES).length;
+    const doesCreepExist = !!Object.values(Game.creeps).filter(c => c.memory.role === CreepBuilder.role).length;
+
+    return !doesCreepExist && isSomethingToBuild;
   }
 
   public static getMemory(): CreepMemory {
@@ -49,11 +50,7 @@ export class CreepBuilder extends BaseCreep {
   private work() {
     // TODO: idea -  have room build plan. Items from plan are added to the queue. Each 1000 ticks plan is check for
     //  missing / destroyed buildings are refreshed
-    const target =
-      this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES) ||
-      Object.values(Game.constructionSites)
-        .filter(cs => cs.my)
-        .sort((a, b) => (a.pos.y - b.pos.y > 0 ? 1 : -1))[0];
+    const target = this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
     if (!target) {
       this.say('⚠️ Build');
       return;

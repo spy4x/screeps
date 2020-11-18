@@ -1,4 +1,4 @@
-import { BaseCreep, findSilo, GetBodyParts, moveTo } from '../helpers/creep';
+import { GetBodyParts, BaseCreep, findSilo, moveTo, getClosestSource } from '../helpers/creep';
 import { WorkerRoles } from '../helpers/types';
 
 export class CreepTruck extends BaseCreep {
@@ -14,10 +14,10 @@ export class CreepTruck extends BaseCreep {
     return { base, extra, maxExtra: 2 };
   }
 
-  public static isNeedOfMore(): boolean {
-    const sourcesLackingTrucks = Object.keys(Memory.sources).filter(sourceId =>
-      CreepTruck.sourceFilter(Memory.sources[sourceId])
-    );
+  public static isNeedOfMore(room: Room): boolean {
+    const sourcesLackingTrucks = room.find(FIND_SOURCES, {
+      filter: s => CreepTruck.sourceFilter(Memory.sources[s.id])
+    });
     return !!sourcesLackingTrucks.length;
   }
 
@@ -27,20 +27,6 @@ export class CreepTruck extends BaseCreep {
       sourceId: null,
       working: false
     };
-  }
-
-  private static sourceFilter(si: SourceInfo): boolean {
-    return (
-      si.isActive &&
-      !!si.excavatorName &&
-      !si.linkId &&
-      si.truckNames.length < 4 &&
-      CreepTruck.getMovePartsAmount(si.truckNames) < si.maxTrackMoveParts
-    );
-  }
-
-  private static getMovePartsAmount(trackNames: string[]): number {
-    return trackNames.reduce((acc, cur) => acc + Game.creeps[cur].body.filter(bp => bp.type === CARRY).length, 0);
   }
 
   public run(): void {
@@ -78,15 +64,13 @@ export class CreepTruck extends BaseCreep {
   }
 
   private get$FromSource() {
-    const sourceInfo = this.getSource();
-    if (!sourceInfo) {
+    const source = this.getSource();
+    if (!source) {
       this.say('⚠️');
-      this.creep.memory.sourceId = null;
       return;
     }
 
-    const roomPosition = new RoomPosition(sourceInfo.pos.x, sourceInfo.pos.y, sourceInfo.pos.roomName);
-    const tombstone = roomPosition.findInRange(FIND_TOMBSTONES, 3, { filter: t => t.store.energy })[0];
+    const tombstone = source.pos.findInRange(FIND_TOMBSTONES, 3, { filter: t => t.store.energy })[0];
     if (tombstone) {
       this.say(`☠️`);
       if (this.creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
@@ -95,7 +79,7 @@ export class CreepTruck extends BaseCreep {
       return;
     }
 
-    const droppedResource = roomPosition.findInRange(FIND_DROPPED_RESOURCES, 3)[0];
+    const droppedResource = source.pos.findInRange(FIND_DROPPED_RESOURCES, 3)[0];
     if (droppedResource) {
       this.say('💎');
       // IMPORTANT: Track collects dropped energy from excavator. Used on low RCLs.
@@ -105,7 +89,7 @@ export class CreepTruck extends BaseCreep {
       return;
     }
 
-    const ruin = roomPosition.findInRange(FIND_RUINS, 3, { filter: t => t.store.energy })[0];
+    const ruin = source.pos.findInRange(FIND_RUINS, 3, { filter: t => t.store.energy })[0];
     if (ruin) {
       this.say(`🏚️`);
       if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
@@ -114,7 +98,7 @@ export class CreepTruck extends BaseCreep {
       return;
     }
 
-    const container = roomPosition.findInRange(FIND_STRUCTURES, 1, {
+    const container = source.pos.findInRange(FIND_STRUCTURES, 1, {
       filter: s => s.structureType === STRUCTURE_CONTAINER
     })[0] as StructureContainer;
     if (container?.store.energy) {
@@ -128,19 +112,37 @@ export class CreepTruck extends BaseCreep {
     this.say('💤');
   }
 
-  private getSource(): null | SourceInfo {
+  private getSource(): null | Source {
     if (this.creep.memory.sourceId) {
-      return Memory.sources[this.creep.memory.sourceId];
+      return Game.getObjectById(this.creep.memory.sourceId);
     }
+
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const sourceId = Object.keys(Memory.sources).find(sid => CreepTruck.sourceFilter(Memory.sources[sid]));
-    if (sourceId) {
-      this.creep.memory.sourceId = sourceId;
-      Memory.sources[sourceId].truckNames.push(this.creep.name);
-      return Memory.sources[sourceId];
+    const source = getClosestSource(this.creep, CreepTruck.sourceFilter);
+
+    if (source) {
+      this.creep.memory.sourceId = source.id;
+      Memory.sources[source.id].truckNames.push(this.creep.name);
     } else {
       console.log(`Truck ${this.creep.name} couldn't find source`);
-      return null;
     }
+
+    return source;
+  }
+
+  private static sourceFilter(si: SourceInfo): boolean {
+    return (
+      si.isActive &&
+      !!si.excavatorName &&
+      !si.linkId &&
+      si.truckNames.length < 4 &&
+      CreepTruck.getMovePartsAmount(si.truckNames) < si.maxTrackMoveParts
+    );
+  }
+  private static getMovePartsAmount(trackNames: string[]): number {
+    return trackNames.reduce(
+      (acc, cur) => (Game.creeps[cur] ? acc + Game.creeps[cur].body.filter(bp => bp.type === CARRY).length : acc),
+      0
+    );
   }
 }
