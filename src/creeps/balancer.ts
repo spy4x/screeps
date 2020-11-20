@@ -11,30 +11,26 @@ export class CreepBalancer extends BaseCreep {
   public static getBodyParts(): GetBodyParts {
     const base = [MOVE, CARRY, CARRY];
     const extra = base;
-    return { base, extra, maxExtra: 5 };
+    return { base, extra, maxExtra: 10 };
   }
 
   public static isNeedOfMore(room: Room): boolean {
-    const notEnoughCreeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBalancer.role).length < 1;
-    const storageExists =
-      !!room.find(FIND_MY_STRUCTURES, {
-        filter: s => s.structureType === STRUCTURE_STORAGE
-      }).length ||
-      !!room.find(FIND_STRUCTURES, {
-        filter: s => s.structureType === STRUCTURE_CONTAINER
-      }).length;
-    const result = notEnoughCreeps && storageExists;
+    const creeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBalancer.role);
+    const notEnoughCreeps = creeps.length < 1;
+    const storageExists = !!room.find(FIND_MY_STRUCTURES, {
+      filter: s => s.structureType === STRUCTURE_STORAGE
+    }).length;
+    const result = (notEnoughCreeps || (creeps[0]?.ticksToLive ?? 0) < 100) && storageExists;
     if (result) {
       console.log(`Balancer needed:`, JSON.stringify({ noOtherBalancer: notEnoughCreeps, storageExists }));
     }
     return result;
   }
 
-  public static getMemory(): CreepMemory {
+  public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepBalancer.role,
-      sourceId: null,
-      working: false
+      roomName: room.name
     };
   }
 
@@ -76,10 +72,15 @@ export class CreepBalancer extends BaseCreep {
         return;
       }
 
-      const tombstone = this.creep.pos.findInRange(FIND_TOMBSTONES, 5, { filter: t => t.store.energy })[0];
+      const tombstone = this.creep.pos.findInRange(FIND_TOMBSTONES, 40, {
+        filter: t => t.store.getUsedCapacity() > 0
+      })[0];
       if (tombstone) {
         this.say(`☠️`);
-        if (this.creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        const resourceType = Object.keys(tombstone.store).find(
+          key => tombstone.store[key as ResourceConstant] > 0
+        )! as ResourceConstant;
+        if (this.creep.withdraw(tombstone, resourceType) === ERR_NOT_IN_RANGE) {
           moveTo(this.creep, tombstone);
         }
         return;
@@ -111,7 +112,7 @@ export class CreepBalancer extends BaseCreep {
       });
 
       if (!closestStore) {
-        this.say('⚠️');
+        this.say('💤');
         return;
       }
       this.say('🛒');

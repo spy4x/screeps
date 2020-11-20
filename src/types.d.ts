@@ -1,7 +1,8 @@
 interface CreepMemory {
-  sourceId: null | string;
+  sourceId?: string;
   role: string;
-  working: boolean;
+  working?: boolean;
+  roomName?: string;
 }
 
 interface SpawnMemory {

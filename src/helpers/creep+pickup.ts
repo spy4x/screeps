@@ -1,15 +1,16 @@
 import { BaseCreep, moveTo } from './creep';
 
-export function pickup(creep: BaseCreep): void {
+export function pickup(creep: BaseCreep): boolean {
   const store = getDefaultPickupStore(creep.creep) || getAlternativePickupStore(creep.creep);
   if (!store) {
     creep.say('⚠️ pickup');
-    return;
+    return false;
   }
   creep.say('🛒');
   if (creep.creep.withdraw(store, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
     moveTo(creep.creep, store);
   }
+  return true;
 }
 
 function getDefaultPickupStore(creep: Creep): null | Structure {

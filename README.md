@@ -2,6 +2,15 @@
 
 Screeps Typescript Starter is a starting point for a Screeps AI written in Typescript. It provides everything you need to start writing your AI whilst leaving `main.ts` as empty as possible.
 
+## Roadmap
+- Define body parts depending on usage goal (source harvester vs mineral harvester)
+- Remote harvest
+- Remote build
+- Building queue
+- Building pattern
+- Renew creep
+- Creep/structure parallel commands (ex: transfer+harvest)
+
 ## Basic Usage
 
 You will need:

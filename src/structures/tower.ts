@@ -11,6 +11,10 @@ export class Tower {
       return;
     }
 
+    if (this.tower.store.energy < 500) {
+      return;
+    }
+
     const creepToHeal = this.tower.pos.findClosestByRange(FIND_MY_CREEPS, {
       filter: creep => creep.hits < creep.hitsMax && creep.memory.role !== WorkerRoles.towerDrainer
     });

@@ -9,32 +9,33 @@ export class CreepExcavator extends BaseCreep {
   }
 
   public static isNeedOfMore(room: Room): boolean {
-    return !!room.find(FIND_SOURCES, {
-      filter: s => {
-        const si = Memory.sources[s.id];
-        return si.isActive && !si.excavatorName;
-      }
-    }).length;
+    const filter = (s: Source | StructureExtractor) => {
+      const si = Memory.sources[s.id];
+      return si.isActive && !si.excavatorName;
+    };
+    return (
+      !!room.find(FIND_SOURCES, { filter }).length ||
+      !!room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_EXTRACTOR && filter(s) }).length
+    );
   }
 
-  public static getMemory(): CreepMemory {
+  public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepExcavator.role,
-      sourceId: null,
-      working: false
+      roomName: room.name
     };
   }
 
   public static getBodyParts(room: Room): GetBodyParts {
     const base: BodyPartConstant[] = room.controller!.level < 5 ? [MOVE, WORK, WORK] : [MOVE, CARRY, WORK, WORK];
     const extra = [WORK];
-    return { base, extra, maxExtra: 4 };
+    return { base, extra, maxExtra: 5 };
   }
 
   public run(): void {
     const source = this.getSource();
     if (!source) {
-      this.creep.memory.sourceId = null;
+      this.creep.memory.sourceId = undefined;
       this.say('⚠️');
       return;
     }
@@ -45,7 +46,7 @@ export class CreepExcavator extends BaseCreep {
     this.pickup();
   }
 
-  private getSource(): null | Source {
+  private getSource(): null | Source | StructureExtractor {
     if (this.creep.memory.sourceId) {
       return Game.getObjectById(this.creep.memory.sourceId);
     }

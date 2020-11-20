@@ -78,32 +78,34 @@ function cleanUpMemory(): void {
 }
 
 /**
- * Automatically delete memory of missing creeps
+ * Automatically create memory for sources
  */
 function createMemorySourcesIfNeeded(): void {
   if (!Memory.sources) {
     Memory.sources = {};
   }
-  Object.values(Game.rooms).forEach(room =>
-    room.find(FIND_SOURCES).forEach(source => {
-      if (Memory.sources[source.id]) {
-        return;
-      }
-      console.log(`Saving new source to memory`, JSON.stringify(source, null, 2));
+  const saveToMemory = (source: Source | Structure) => {
+    if (Memory.sources[source.id]) {
+      return;
+    }
+    console.log(`Saving new source to memory`, JSON.stringify(source, null, 2));
 
-      const spawn = source.pos.findClosestByRange(FIND_MY_SPAWNS);
-      const maxTrackMoveParts = spawn ? Math.ceil(spawn.pos.findPathTo(source).length / 4) || 1 : 12;
+    const spawn = source.pos.findClosestByRange(FIND_MY_SPAWNS);
+    const maxTrackMoveParts = spawn ? Math.ceil(spawn.pos.findPathTo(source).length / 4) || 1 : 12;
 
-      Memory.sources[source.id] = {
-        pos: source.pos,
-        isActive: true,
-        excavatorName: null,
-        linkId: null,
-        maxTrackMoveParts,
-        truckNames: []
-      };
-    })
-  );
+    Memory.sources[source.id] = {
+      pos: source.pos,
+      isActive: true,
+      excavatorName: null,
+      linkId: null,
+      maxTrackMoveParts,
+      truckNames: []
+    };
+  };
+  Object.values(Game.rooms).forEach(room => {
+    room.find(FIND_SOURCES).forEach(saveToMemory);
+    room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_EXTRACTOR }).forEach(saveToMemory);
+  });
 }
 
 function runCreep(creep: Creep): void {

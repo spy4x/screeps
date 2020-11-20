@@ -18,19 +18,21 @@ export class CreepTruck extends BaseCreep {
     const sourcesLackingTrucks = room.find(FIND_SOURCES, {
       filter: s => CreepTruck.sourceFilter(Memory.sources[s.id])
     });
-    return !!sourcesLackingTrucks.length;
+    const extractorsLackingTrucks = room.find(FIND_MY_STRUCTURES, {
+      filter: s => s.structureType === STRUCTURE_EXTRACTOR && CreepTruck.sourceFilter(Memory.sources[s.id])
+    });
+    return !!sourcesLackingTrucks.length || !!extractorsLackingTrucks.length;
   }
 
-  public static getMemory(): CreepMemory {
+  public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepTruck.role,
-      sourceId: null,
-      working: false
+      roomName: room.name
     };
   }
 
   public run(): void {
-    if (this.creep.memory.working && this.creep.store.energy === 0) {
+    if (this.creep.memory.working && this.creep.store.getUsedCapacity() === 0) {
       this.creep.memory.working = false;
       this.say('🔜');
     }
@@ -49,15 +51,16 @@ export class CreepTruck extends BaseCreep {
     const silo = findSilo(this.creep);
     if (silo) {
       this.say(`💸`);
-      const transferResult = this.creep.transfer(silo, RESOURCE_ENERGY);
+      const resourceType = Object.keys(this.creep.store).find(
+        key => this.creep.store[key as ResourceConstant] > 0
+      )! as ResourceConstant;
+      const transferResult = this.creep.transfer(silo, resourceType);
       if (transferResult === ERR_NOT_IN_RANGE) {
         moveTo(this.creep, silo);
       } else if (transferResult === OK) {
         if (this.creep.store.getUsedCapacity() === 0) {
           this.get$FromSource();
-        } /* else {
-          this.get$ToBase();
-        }*/
+        }
       }
     } else {
       this.say('⚠️');
@@ -105,9 +108,15 @@ export class CreepTruck extends BaseCreep {
     const container = source.pos.findInRange(FIND_STRUCTURES, 1, {
       filter: s => s.structureType === STRUCTURE_CONTAINER
     })[0] as StructureContainer;
-    if (container?.store.energy) {
+    if (container?.store.getUsedCapacity()) {
       this.say('🛒');
-      if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+      let resourceType: ResourceConstant;
+      if (source instanceof StructureExtractor) {
+        resourceType = source.pos.lookFor(LOOK_MINERALS)[0].mineralType;
+      } else {
+        resourceType = RESOURCE_ENERGY;
+      }
+      if (this.creep.withdraw(container, resourceType) === ERR_NOT_IN_RANGE) {
         moveTo(this.creep, container);
       }
       return;
@@ -116,7 +125,7 @@ export class CreepTruck extends BaseCreep {
     this.say('💤');
   }
 
-  private getSource(): null | Source {
+  private getSource(): null | Source | StructureExtractor {
     if (this.creep.memory.sourceId) {
       return Game.getObjectById(this.creep.memory.sourceId);
     }

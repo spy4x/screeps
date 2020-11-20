@@ -30,6 +30,9 @@ export class SpawnController {
         this.energyStatus
       }`
     );
+
+    this.renew();
+
     if (this.spawn.spawning) {
       const role = this.spawn.memory.spawning.role;
       const cost = this.spawn.memory.spawning.cost;
@@ -125,6 +128,17 @@ export class SpawnController {
       }
       return 0;
     });
+  }
+
+  private renew() {
+    // TODO: decide if creep should be renewed based on his body parts - are they actual?
+    // const creepsToRecycle = this.spawn.pos.findInRange(FIND_MY_CREEPS, 1, {
+    //   filter: s => s.ticksToLive && s.ticksToLive < 1120
+    // });
+    // creepsToRecycle.forEach(c => {
+    //   const result = this.spawn.renewCreep(c);
+    //   console.log('Spawn.renew()', JSON.stringify({ creep: c.name, result }));
+    // });
   }
 }
 

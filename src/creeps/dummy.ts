@@ -18,8 +18,7 @@ export class CreepDummy extends BaseCreep {
   public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepDummy.role,
-      sourceId: room.name,
-      working: false
+      roomName: room.name
     };
   }
 
@@ -51,6 +50,6 @@ export class CreepDummy extends BaseCreep {
   }
 
   private returnHome() {
-    moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.sourceId!));
+    moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.roomName!));
   }
 }

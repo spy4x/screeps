@@ -1,6 +1,5 @@
 export class DrawService {
   private drawAmount = 0;
-  private static shouldDraw = Memory.shouldDraw;
 
   public constructor(
     private room: Room,
@@ -11,7 +10,7 @@ export class DrawService {
   ) {}
 
   public draw(text: string, style?: TextStyle): void {
-    if (!DrawService.shouldDraw) {
+    if (!Memory.shouldDraw) {
       return;
     }
     const pos = new RoomPosition(

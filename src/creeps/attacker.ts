@@ -9,17 +9,16 @@ export class CreepAttacker extends BaseCreep {
   }
 
   public static isNeedOfMore(room: Room): boolean {
-    // return false;
-    const roomLvLEnough = room.controller!.level >= 5;
-    const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepAttacker.role).length < 1;
-    return roomLvLEnough && notEnoughCreeps && !!Game.flags[CreepAttacker.role];
+    return false;
+    // const roomLvLEnough = room.controller!.level >= 5;
+    // const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepAttacker.role).length < 1;
+    // return roomLvLEnough && notEnoughCreeps && !!Game.flags[CreepAttacker.role];
   }
 
   public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepAttacker.role,
-      sourceId: room.name,
-      working: false
+      roomName: room.name
     };
   }
 
@@ -74,7 +73,7 @@ export class CreepAttacker extends BaseCreep {
   }
 
   private returnHome() {
-    if (this.creep.room.name === this.creep.memory.sourceId) {
+    if (this.creep.room.name === this.creep.memory.roomName) {
       moveTo(
         this.creep,
         this.creep.room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_TOWER })[0]

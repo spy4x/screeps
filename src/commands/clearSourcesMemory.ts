@@ -8,7 +8,7 @@ export function csm(): void {
   });
   Object.values(Memory.creeps).forEach(c => {
     if ([WorkerRoles.truck, WorkerRoles.excavator].includes(c.role as WorkerRoles)) {
-      c.sourceId = null;
+      c.sourceId = undefined;
     }
   });
 }

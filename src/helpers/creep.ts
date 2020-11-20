@@ -62,9 +62,18 @@ function getPathColorForRole(role: WorkerRoles): string {
   }
 }
 
-export function harvest(creep: Creep, source: Source): void {
-  if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+export function harvest(creep: Creep, source: Source | StructureExtractor): void {
+  const target = source instanceof Source ? source : source.pos.lookFor(LOOK_MINERALS)[0];
+  const harvestResult = creep.harvest(target);
+  if (harvestResult === ERR_NOT_IN_RANGE) {
     moveTo(creep, source);
+  } else if (
+    harvestResult !== OK &&
+    harvestResult !== ERR_BUSY &&
+    harvestResult !== ERR_NOT_ENOUGH_RESOURCES &&
+    harvestResult !== ERR_TIRED
+  ) {
+    console.log('harvest(): Error:', JSON.stringify({ creep: creep.name, harvestResult }));
   }
 }
 
@@ -81,21 +90,54 @@ export function moveTo(
 
 export function getClosestSource(
   creep: Creep,
-  filter: (sourceInfo: SourceInfo, source: Source) => boolean
-): null | Source {
-  return creep.pos.findClosestByRange(FIND_SOURCES, {
-    filter: (source: Source) => {
-      const sourceInfo = Memory.sources[source.id];
-      if (!sourceInfo) {
-        console.log(
-          `getClosestSource(): Source doesn't exist in "Memory.sources".`,
-          JSON.stringify({ creep: creep.name, source: source.id })
-        );
-        return false;
+  filter: (sourceInfo: SourceInfo, source: Source | StructureExtractor) => boolean
+): null | Source | StructureExtractor {
+  const flag = Game.flags['remote_harvest'];
+  return (
+    creep.pos.findClosestByRange(FIND_SOURCES, {
+      filter: (source: Source) => {
+        const sourceInfo = Memory.sources[source.id];
+        if (!sourceInfo) {
+          console.log(
+            `getClosestSource(): Source doesn't exist in "Memory.sources".`,
+            JSON.stringify({ creep: creep.name, source: source.id })
+          );
+          return false;
+        }
+        return filter(sourceInfo, source);
       }
-      return filter(sourceInfo, source);
-    }
-  });
+    }) ||
+    (creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
+      filter: (structure: Structure) => {
+        if (structure.structureType !== STRUCTURE_EXTRACTOR) {
+          return false;
+        }
+        const sourceInfo = Memory.sources[structure.id];
+        if (!sourceInfo) {
+          console.log(
+            `getClosestSource(): StructureExtractor doesn't exist in "Memory.sources".`,
+            JSON.stringify({ creep: creep.name, source: structure.id })
+          );
+          return false;
+        }
+        return filter(sourceInfo, structure as StructureExtractor);
+      }
+    }) as null | StructureExtractor) ||
+    (flag &&
+      flag.pos.findClosestByRange(FIND_SOURCES, {
+        filter: (source: Source) => {
+          const sourceInfo = Memory.sources[source.id];
+          if (!sourceInfo) {
+            console.log(
+              `getClosestSource(): Source doesn't exist in "Memory.sources".`,
+              JSON.stringify({ creep: creep.name, source: source.id })
+            );
+            return false;
+          }
+          return filter(sourceInfo, source);
+        }
+      }))
+  );
 }
 
 export function findSilo(creep: Creep): null | Structure {
@@ -109,7 +151,10 @@ export function findSilo(creep: Creep): null | Structure {
         structure.structureType === STRUCTURE_CONTAINER;
       const isSourceContainer =
         structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
-      return isStore && !isSourceContainer && (structure as any).store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+      const isMineralContainer =
+        structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_MINERALS, 1).length;
+      const freeCapacity = isStore && (structure as any).store.getFreeCapacity(RESOURCE_ENERGY);
+      return isStore && !isSourceContainer && !isMineralContainer && freeCapacity > 0;
     }
   });
 }
@@ -133,8 +178,7 @@ export class BaseCreep {
   public static getMemory(room: Room): CreepMemory {
     return {
       role: WorkerRoles.truck,
-      sourceId: null,
-      working: false
+      roomName: room.name
     };
   }
   public say(text: string): void {

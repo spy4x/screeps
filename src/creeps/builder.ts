@@ -1,4 +1,4 @@
-import { GetBodyParts, BaseCreep, moveTo } from '../helpers/creep';
+import { GetBodyParts, BaseCreep, moveTo, harvest } from '../helpers/creep';
 import { pickup } from '../helpers/creep+pickup';
 import { WorkerRoles } from '../helpers/types';
 
@@ -21,18 +21,27 @@ export class CreepBuilder extends BaseCreep {
     const isSomethingToBuild = !!room.find(FIND_MY_CONSTRUCTION_SITES).length;
     const isLackingCreeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBuilder.role).length < 1;
 
-    return isLackingCreeps && isSomethingToBuild;
+    const flag = Game.flags[CreepBuilder.role];
+    return (
+      (isLackingCreeps && isSomethingToBuild) ||
+      (flag &&
+        !!flag.room?.find(FIND_MY_CONSTRUCTION_SITES).length &&
+        flag.room?.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBuilder.role).length < 1)
+    );
   }
 
-  public static getMemory(): CreepMemory {
+  public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepBuilder.role,
-      sourceId: null,
-      working: false
+      roomName: room.name
     };
   }
 
   public run(): void {
+    if (this.creep.memory.roomName && this.creep.room.name !== this.creep.memory.roomName) {
+      moveTo(this.creep, new RoomPosition(20, 20, this.creep.memory.roomName));
+      return;
+    }
     if (this.creep.memory.working && this.creep.store[RESOURCE_ENERGY] === 0) {
       this.creep.memory.working = false;
     }
@@ -43,7 +52,13 @@ export class CreepBuilder extends BaseCreep {
     if (this.creep.memory.working) {
       this.work();
     } else {
-      pickup(this);
+      if (!pickup(this)) {
+        const source = this.creep.pos.findClosestByPath(FIND_SOURCES);
+        if (!source) {
+          return;
+        }
+        harvest(this.creep, source);
+      }
     }
   }
 
@@ -52,7 +67,12 @@ export class CreepBuilder extends BaseCreep {
     //  missing / destroyed buildings are refreshed
     const target = this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
     if (!target) {
-      this.say('⚠️ Build');
+      const flag = Game.flags[CreepBuilder.role];
+      if (flag && flag.room?.name !== this.creep.room.name) {
+        moveTo(this.creep, flag);
+      } else {
+        this.say('⚠️ Build');
+      }
       return;
     }
     this.say('👷‍️');

@@ -17,8 +17,7 @@ export class CreepScout extends BaseCreep {
   public static getMemory(): CreepMemory {
     return {
       role: CreepScout.role,
-      sourceId: 'E49N25',
-      working: false
+      roomName: 'E49N25'
     };
   }
 
@@ -27,7 +26,7 @@ export class CreepScout extends BaseCreep {
   }
 
   public run(): void {
-    const roomName = this.creep.memory.sourceId;
+    const roomName = this.creep.memory.roomName;
     if (!roomName) {
       this.say('⚠️');
       return;

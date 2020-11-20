@@ -18,8 +18,7 @@ export class CreepTowerDrainer extends BaseCreep {
   public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepTowerDrainer.role,
-      sourceId: room.name,
-      working: false
+      roomName: room.name
     };
   }
 
@@ -61,10 +60,10 @@ export class CreepTowerDrainer extends BaseCreep {
         moveTo(this.creep, flag);
       }
     } else {
-      if (this.creep.room.name === this.creep.memory.sourceId!) {
+      if (this.creep.room.name === this.creep.memory.roomName!) {
         this.heal();
       } else {
-        moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.sourceId!));
+        moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.roomName!));
       }
     }
   }
