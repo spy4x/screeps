@@ -48,12 +48,11 @@ export class CreepTruck extends BaseCreep {
   }
 
   private get$ToBase() {
-    const silo = findSilo(this.creep);
+    const resourceType = Object.keys(this.creep.store).find(
+      key => this.creep.store[key as ResourceConstant] > 0
+    )! as ResourceConstant;
+    const silo = findSilo(this.creep, resourceType);
     if (silo) {
-      this.say(`💸`);
-      const resourceType = Object.keys(this.creep.store).find(
-        key => this.creep.store[key as ResourceConstant] > 0
-      )! as ResourceConstant;
       const transferResult = this.creep.transfer(silo, resourceType);
       if (transferResult === ERR_NOT_IN_RANGE) {
         moveTo(this.creep, silo);
@@ -61,6 +60,11 @@ export class CreepTruck extends BaseCreep {
         if (this.creep.store.getUsedCapacity() === 0) {
           this.get$FromSource();
         }
+      } else {
+        console.log(
+          'CreepTruck.get$ToBase():',
+          `Unexpected transfer result: ${transferResult}. ResourceType to transfer: ${resourceType}. Silo ${silo.id}`
+        );
       }
     } else {
       this.say('⚠️');

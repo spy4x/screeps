@@ -10,6 +10,7 @@ Screeps Typescript Starter is a starting point for a Screeps AI written in Types
 - Building pattern
 - Renew creep
 - Creep/structure parallel commands (ex: transfer+harvest)
+- Creep.prototype.recycle() - to give command to kill creep and get back some money if it's not needed any more
 
 ## Basic Usage
 

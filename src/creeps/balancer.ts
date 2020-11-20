@@ -1,4 +1,4 @@
-import { GetBodyParts, BaseCreep, moveTo } from '../helpers/creep';
+import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
 import { WorkerRoles } from '../helpers/types';
 
 export class CreepBalancer extends BaseCreep {
@@ -15,16 +15,18 @@ export class CreepBalancer extends BaseCreep {
   }
 
   public static isNeedOfMore(room: Room): boolean {
+    const MAX_CREEPS = 1;
     const creeps = room.find(FIND_MY_CREEPS).filter(c => c.memory.role === CreepBalancer.role);
-    const notEnoughCreeps = creeps.length < 1;
-    const storageExists = !!room.find(FIND_MY_STRUCTURES, {
-      filter: s => s.structureType === STRUCTURE_STORAGE
-    }).length;
-    const result = (notEnoughCreeps || (creeps[0]?.ticksToLive ?? 0) < 100) && storageExists;
-    if (result) {
-      console.log(`Balancer needed:`, JSON.stringify({ noOtherBalancer: notEnoughCreeps, storageExists }));
-    }
-    return result;
+    const notEnoughCreeps = creeps.length < MAX_CREEPS;
+    const storageExists =
+      !!room.find(FIND_MY_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_STORAGE
+      }).length ||
+      !!room.find(FIND_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_CONTAINER && !s.pos.findInRange(FIND_SOURCES, 1).length
+      }).length;
+    const creepIsDying = creeps.length === MAX_CREEPS && (creeps[0]?.ticksToLive ?? 0) < 100;
+    return (notEnoughCreeps || creepIsDying) && storageExists;
   }
 
   public static getMemory(room: Room): CreepMemory {

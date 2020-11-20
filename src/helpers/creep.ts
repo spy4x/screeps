@@ -140,7 +140,7 @@ export function getClosestSource(
   );
 }
 
-export function findSilo(creep: Creep): null | Structure {
+export function findSilo(creep: Creep, resourceType: ResourceConstant): null | Structure {
   return creep.pos.findClosestByPath(FIND_STRUCTURES, {
     filter: structure => {
       const isStore =
@@ -153,7 +153,7 @@ export function findSilo(creep: Creep): null | Structure {
         structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
       const isMineralContainer =
         structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_MINERALS, 1).length;
-      const freeCapacity = isStore && (structure as any).store.getFreeCapacity(RESOURCE_ENERGY);
+      const freeCapacity = isStore && (structure as any).store.getFreeCapacity(resourceType);
       return isStore && !isSourceContainer && !isMineralContainer && freeCapacity > 0;
     }
   });

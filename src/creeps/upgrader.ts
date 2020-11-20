@@ -21,7 +21,7 @@ export class CreepUpgrader extends BaseCreep {
     } else {
       extra = [CARRY, WORK, WORK, WORK];
     }
-    return { base, extra, maxExtra: room.storage?.store.energy ?? 0 > 50000 ? MAX_CREEP_SIZE : 2 };
+    return { base, extra, maxExtra: room.storage?.store.energy ?? 0 > 50000 ? MAX_CREEP_SIZE : 3 };
   }
 
   public static isNeedOfMore(room: Room): boolean {
