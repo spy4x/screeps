@@ -7,20 +7,32 @@ export function getRoleShortName(role: WorkerRoles): string {
       return '😅';
     case WorkerRoles.builder:
       return '👷';
+    case WorkerRoles.remoteBuilder:
+      return '🚀👷';
     case WorkerRoles.upgrader:
       return '⚡';
     case WorkerRoles.excavator:
       return '⛏️';
+    case WorkerRoles.mineralExcavator:
+      return '⛏💎';
+    case WorkerRoles.remoteExcavator:
+      return '🚀⛏️';
     case WorkerRoles.truck:
       return '🚚';
+    case WorkerRoles.remoteTruck:
+      return '🚀🚚';
     case WorkerRoles.balancer:
       return '⚖️';
-    case WorkerRoles.scout:
+    case WorkerRoles.claimer:
       return '🏇';
+    case WorkerRoles.scout:
+      return '🤠';
     case WorkerRoles.attacker:
       return '⚔️';
     case WorkerRoles.dummy:
       return '😱';
+    case WorkerRoles.linker:
+      return '🔗';
   }
 }
 
@@ -42,15 +54,21 @@ export const createName = (role: WorkerRoles): string => {
 function getPathColorForRole(role: WorkerRoles): string {
   switch (role) {
     case WorkerRoles.excavator:
+    case WorkerRoles.remoteExcavator:
+    case WorkerRoles.mineralExcavator:
       return '#fff200'; // gold
     case WorkerRoles.truck:
+    case WorkerRoles.remoteTruck:
       return '#aaff00'; // bright yellow
     case WorkerRoles.upgrader:
       return '#ea00ff'; // violet
     case WorkerRoles.builder:
+    case WorkerRoles.remoteBuilder:
       return '#0062ff'; // blue
     case WorkerRoles.balancer:
+    case WorkerRoles.linker:
       return '#00ffd9'; // cyan
+    case WorkerRoles.claimer:
     case WorkerRoles.scout:
       return '#a87332'; // orange
     case WorkerRoles.towerDrainer:
@@ -79,13 +97,48 @@ export function harvest(creep: Creep, source: Source | StructureExtractor): void
 
 export function moveTo(
   creep: Creep,
-  target: RoomPosition | { pos: RoomPosition },
+  target: RoomPosition | { pos: RoomPosition } | { pos: { x: number; y: number; roomName: string } },
   opts?: MoveToOpts
 ): CreepMoveReturnCode | ERR_NO_PATH | ERR_INVALID_TARGET | ERR_NOT_FOUND {
-  return creep.moveTo(target, {
-    visualizePathStyle: { stroke: getPathColorForRole(creep.memory.role as WorkerRoles), opacity: 0.8 },
+  const visualizePathStyle = Memory.shouldDraw
+    ? { stroke: getPathColorForRole(creep.memory.role as WorkerRoles), opacity: 0.8 }
+    : undefined;
+  const roomPos =
+    target instanceof RoomPosition || target.pos instanceof RoomPosition
+      ? (target as RoomPosition)
+      : new RoomPosition(target.pos.x, target.pos.y, target.pos.roomName);
+  return creep.moveTo(roomPos, {
+    visualizePathStyle,
     ...opts
   });
+}
+
+export function findResourceToTransfer({ store }: { store: Store<ResourceConstant, false> }): null | ResourceConstant {
+  const storeKeys = Object.keys(store);
+  return (
+    (storeKeys.find(key => key !== RESOURCE_ENERGY && store[key as ResourceConstant] > 0)! as ResourceConstant) ||
+    (storeKeys.find(key => store[key as ResourceConstant] > 0)! as ResourceConstant)
+  );
+}
+
+export function transfer(
+  creep: Creep,
+  target: Creep | PowerCreep | Structure,
+  resourceType: ResourceConstant = RESOURCE_ENERGY
+): boolean {
+  const transferResult = creep.transfer(target, resourceType);
+  if (transferResult === OK) {
+    return true;
+  } else if (transferResult === ERR_NOT_IN_RANGE) {
+    moveTo(creep, target);
+  } else {
+    console.log(
+      `Creep ${creep.name} transfer result of ${resourceType} to ${
+        (target as Creep).name || `${(target as Structure).structureType} ${target.id}`
+      } failed with error ${transferResult}`
+    );
+  }
+  return false;
 }
 
 export function getClosestSource(
@@ -164,22 +217,17 @@ export interface GetBodyParts {
   extra: BodyPartConstant[];
   maxExtra: number;
 }
+export interface CreepSchema {
+  bodyParts: GetBodyParts;
+  memory: CreepMemory;
+}
 
 export class BaseCreep {
   public static role: WorkerRoles;
   private drawService = new DrawService(this.creep.room, this.creep.pos);
   public constructor(public creep: Creep) {}
-  public static getBodyParts(room: Room): GetBodyParts {
-    return { base: [], extra: [], maxExtra: 0 };
-  }
-  public static isNeedOfMore(room: Room): boolean {
-    return true;
-  }
-  public static getMemory(room: Room): CreepMemory {
-    return {
-      role: WorkerRoles.truck,
-      roomName: room.name
-    };
+  public static isNeedOfMore(room: Room): false | CreepSchema {
+    return false;
   }
   public say(text: string): void {
     this.drawService.draw(text, { opacity: 0.5, backgroundPadding: 0.2 });

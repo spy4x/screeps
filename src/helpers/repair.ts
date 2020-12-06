@@ -27,8 +27,9 @@ function healthFilter(structure: Structure, healthPercentage: number): boolean {
     healthPercentage === 100
       ? structure.hits < structure.hitsMax
       : (structure.hits / structure.hitsMax) * 100 < healthPercentage;
-  const isRampart = structure.structureType === STRUCTURE_RAMPART || structure.structureType === STRUCTURE_WALL;
-  return isRampart ? structure.hits < 900 : isHealthLowerThanPercentage;
+  const isRampart = structure.structureType === STRUCTURE_RAMPART;
+  const isWall = structure.structureType === STRUCTURE_WALL;
+  return isRampart ? structure.hits < 900 : isWall ? structure.hits < 100 : isHealthLowerThanPercentage;
 }
 
 export function isAnythingToRepair(room: Room): boolean {

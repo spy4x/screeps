@@ -1,11 +1,23 @@
 import { BaseCreep, moveTo } from './creep';
+import { LinkMemoryType } from './types';
 
-export function pickup(creep: BaseCreep): boolean {
-  const store = getDefaultPickupStore(creep.creep) || getAlternativePickupStore(creep.creep);
+export function pickupEnergy(creep: BaseCreep): boolean {
+  const store = getSilo(creep.creep);
+
   if (!store) {
     creep.say('⚠️ pickup');
     return false;
   }
+
+  if (
+    store.structureType !== STRUCTURE_LINK &&
+    store.store.getCapacity(RESOURCE_ENERGY) >= creep.creep.store.getCapacity(RESOURCE_ENERGY) &&
+    store.store.energy < creep.creep.store.getFreeCapacity(RESOURCE_ENERGY)
+  ) {
+    creep.say('⚠️ pickup');
+    return false;
+  }
+
   creep.say('🛒');
   if (creep.creep.withdraw(store, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
     moveTo(creep.creep, store);
@@ -13,30 +25,30 @@ export function pickup(creep: BaseCreep): boolean {
   return true;
 }
 
-function getDefaultPickupStore(creep: Creep): null | Structure {
-  return creep.pos.findClosestByPath(FIND_STRUCTURES, {
-    filter: structure => {
-      if (!isStoreType(structure)) {
-        return false;
-      }
-
-      return (structure as any).store[RESOURCE_ENERGY] > 0;
-    }
-  });
-}
-
-function getAlternativePickupStore(creep: Creep): null | Structure {
-  const doesStoreExist = creep.room.find(FIND_STRUCTURES, { filter: s => isStoreType(s) });
-  if (doesStoreExist.length) {
-    return null; // wait for store to be filled
+function getSilo(creep: Creep): null | (Structure & { store: Store<RESOURCE_ENERGY | ResourceConstant, false> }) {
+  const link = creep.pos.findInRange(FIND_MY_STRUCTURES, 3, {
+    filter: s => s.structureType === STRUCTURE_LINK && Memory.links[s.id].type !== LinkMemoryType.base
+  })[0] as StructureLink;
+  if (link) {
+    return link;
   }
-  // take from Spawn as a fallback
-  return creep.pos.findClosestByPath(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_SPAWN });
-}
 
-function isStoreType(structure: Structure): boolean {
-  const isStore = structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_CONTAINER;
-  const isSourceContainer =
-    structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
-  return isStore && !isSourceContainer;
+  const storage = creep.room.storage;
+  if (storage) {
+    return storage;
+  }
+
+  const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+    filter: structure => structure.structureType === STRUCTURE_CONTAINER
+  }) as StructureContainer;
+  if (container) {
+    return container;
+  }
+
+  const spawn = creep.pos.findClosestByPath(FIND_MY_SPAWNS);
+  if (spawn) {
+    return spawn;
+  }
+
+  return null;
 }

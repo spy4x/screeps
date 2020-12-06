@@ -1,5 +1,5 @@
-import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
-import { WorkerRoles } from '../helpers/types';
+import { BaseCreep, CreepSchema, GetBodyParts, moveTo } from '../../helpers/creep';
+import { WorkerRoles } from '../../helpers/types';
 
 export class CreepDummy extends BaseCreep {
   public static role = WorkerRoles.dummy;
@@ -8,7 +8,7 @@ export class CreepDummy extends BaseCreep {
     super(creep);
   }
 
-  public static isNeedOfMore(room: Room): boolean {
+  public static isNeedOfMore(room: Room): false | CreepSchema {
     return false;
     // const roomLvLEnough = room.controller!.level >= 2;
     // const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepDummy.role).length < 20;
@@ -18,7 +18,7 @@ export class CreepDummy extends BaseCreep {
   public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepDummy.role,
-      roomName: room.name
+      parentRoomName: room.name
     };
   }
 
@@ -50,6 +50,6 @@ export class CreepDummy extends BaseCreep {
   }
 
   private returnHome() {
-    moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.roomName!));
+    moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.parentRoomName!));
   }
 }

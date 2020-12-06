@@ -1,5 +1,5 @@
-import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
-import { WorkerRoles } from '../helpers/types';
+import { BaseCreep, CreepSchema, GetBodyParts, moveTo } from '../../helpers/creep';
+import { WorkerRoles } from '../../helpers/types';
 
 export class CreepAttacker extends BaseCreep {
   public static role = WorkerRoles.attacker;
@@ -8,27 +8,41 @@ export class CreepAttacker extends BaseCreep {
     super(creep);
   }
 
-  public static isNeedOfMore(room: Room): boolean {
-    return false;
-    // const roomLvLEnough = room.controller!.level >= 5;
-    // const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepAttacker.role).length < 1;
-    // return roomLvLEnough && notEnoughCreeps && !!Game.flags[CreepAttacker.role];
-  }
+  public static isNeedOfMore(room: Room): false | CreepSchema {
+    const doesFlagExist = !!Game.flags[CreepAttacker.role];
+    if (!doesFlagExist) {
+      return false;
+    }
 
-  public static getMemory(room: Room): CreepMemory {
+    const roomLvLEnough = room.controller!.level >= 5;
+    if (!roomLvLEnough) {
+      return false;
+    }
+
+    const maxCreeps = 1;
+    const creepsAmount = Object.values(Game.creeps).filter(
+      c => c.memory.role === CreepAttacker.role && (!c.ticksToLive || c.ticksToLive > 100)
+    ).length;
+    if (creepsAmount >= maxCreeps) {
+      return false;
+    }
+
     return {
-      role: CreepAttacker.role,
-      roomName: room.name
+      memory: {
+        role: CreepAttacker.role,
+        parentRoomName: room.name
+      },
+      bodyParts: CreepAttacker.getBodyParts(room)
     };
   }
 
   public static getBodyParts(room: Room): GetBodyParts {
-    const amount = 5;
-    const toughParts = new Array(amount).fill(TOUGH) as BodyPartConstant[];
-    const attackParts = new Array(amount).fill(ATTACK) as BodyPartConstant[];
-    const moveParts = new Array(amount * 2).fill(MOVE) as BodyPartConstant[];
-    const base = [...toughParts, ...attackParts, ...moveParts];
-    return { base, extra: base, maxExtra: MAX_CREEP_SIZE };
+    const base = [TOUGH, ATTACK, MOVE, MOVE];
+    return {
+      base,
+      extra: base,
+      maxExtra: 11 // 48 parts max (to make sure there are enough move parts)
+    };
   }
 
   public run(): void {
@@ -73,7 +87,7 @@ export class CreepAttacker extends BaseCreep {
   }
 
   private returnHome() {
-    if (this.creep.room.name === this.creep.memory.roomName) {
+    if (this.creep.room.name === this.creep.memory.parentRoomName) {
       moveTo(
         this.creep,
         this.creep.room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_TOWER })[0]

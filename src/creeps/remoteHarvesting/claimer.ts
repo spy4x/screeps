@@ -1,39 +1,45 @@
-import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
-import { WorkerRoles } from '../helpers/types';
+import { BaseCreep, CreepSchema, moveTo } from '../../helpers/creep';
+import { WorkerRoles } from '../../helpers/types';
 
-export class CreepScout extends BaseCreep {
-  public static role = WorkerRoles.scout;
+export class CreepClaimer extends BaseCreep {
+  public static role = WorkerRoles.claimer;
 
   public constructor(creep: Creep) {
     super(creep);
   }
 
-  public static isNeedOfMore(): boolean {
-    return false;
-    // const noOtherScout = !Object.values(Game.creeps).filter(c => c.memory.role === CreepScout.role).length;
-    // return noOtherScout;
-  }
+  public static isNeedOfMore(room: Room): false | CreepSchema {
+    const targetRoomName = Object.keys(Memory.remoteHarvestingInRoom).find(roomName => {
+      const rh = Memory.remoteHarvestingInRoom[roomName];
+      return rh.isActive && !rh.claimerName && rh.mainRoomName === room.name;
+    });
+    if (!targetRoomName) {
+      return false;
+    }
 
-  public static getMemory(): CreepMemory {
     return {
-      role: CreepScout.role,
-      roomName: 'E49N25'
+      memory: {
+        role: CreepClaimer.role,
+        parentRoomName: room.name,
+        targetRoomName
+      },
+      bodyParts: { base: [MOVE, CLAIM], extra: [], maxExtra: 0 }
     };
   }
 
-  public static getBodyParts(room: Room): GetBodyParts {
-    return { base: [MOVE, CLAIM], extra: [], maxExtra: 0 };
-  }
-
   public run(): void {
-    const roomName = this.creep.memory.roomName;
+    const roomName = this.creep.memory.targetRoomName;
     if (!roomName) {
-      this.say('⚠️');
       return;
     }
-    const controller = this.creep.room.controller!;
+    Memory.remoteHarvestingInRoom[roomName].claimerName = this.creep.name;
 
     if (this.creep.room.name === roomName) {
+      const controller = this.creep.room.controller;
+      if (!controller) {
+        return;
+      }
+
       moveTo(this.creep, controller);
       if (controller.owner && !controller.my) {
         const attackControllerResult = this.creep.attackController(controller);
@@ -51,7 +57,7 @@ export class CreepScout extends BaseCreep {
             moveTo(this.creep, controller);
           }
         } else {
-          console.log(`Scout: claim result: ${claimControllerResult}`);
+          console.log(`${this.creep.memory.role} ${this.creep.name}: Claim result: ${claimControllerResult}`);
         }
       }
     } else {

@@ -1,5 +1,5 @@
-import { BaseCreep, GetBodyParts, moveTo } from '../helpers/creep';
-import { WorkerRoles } from '../helpers/types';
+import { BaseCreep, CreepSchema, GetBodyParts, moveTo } from '../../helpers/creep';
+import { WorkerRoles } from '../../helpers/types';
 
 export class CreepTowerDrainer extends BaseCreep {
   public static role = WorkerRoles.towerDrainer;
@@ -8,7 +8,7 @@ export class CreepTowerDrainer extends BaseCreep {
     super(creep);
   }
 
-  public static isNeedOfMore(room: Room): boolean {
+  public static isNeedOfMore(room: Room): false | CreepSchema {
     return false;
     // const roomLvLEnough = room.controller!.level >= 5;
     // const notEnoughCreeps = Object.values(Game.creeps).filter(c => c.memory.role === CreepTowerDrainer.role).length < 1;
@@ -18,7 +18,7 @@ export class CreepTowerDrainer extends BaseCreep {
   public static getMemory(room: Room): CreepMemory {
     return {
       role: CreepTowerDrainer.role,
-      roomName: room.name
+      parentRoomName: room.name
     };
   }
 
@@ -50,7 +50,10 @@ export class CreepTowerDrainer extends BaseCreep {
   private returnHome() {
     const flag = Game.flags[`${CreepTowerDrainer.role}_backup`];
     if (flag) {
-      if (this.creep.room.name === flag.room!.name) {
+      if (!flag.room) {
+        return;
+      }
+      if (this.creep.room.name === flag.room.name) {
         if (this.creep.pos.findPathTo(flag).length > 1) {
           moveTo(this.creep, flag);
         } else {
@@ -60,10 +63,10 @@ export class CreepTowerDrainer extends BaseCreep {
         moveTo(this.creep, flag);
       }
     } else {
-      if (this.creep.room.name === this.creep.memory.roomName!) {
+      if (this.creep.room.name === this.creep.memory.parentRoomName!) {
         this.heal();
       } else {
-        moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.roomName!));
+        moveTo(this.creep, new RoomPosition(42, 26, this.creep.memory.parentRoomName!));
       }
     }
   }

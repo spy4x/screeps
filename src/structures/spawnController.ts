@@ -1,15 +1,21 @@
-import { createName, GetBodyParts, getRoleShortName } from '../helpers/creep';
-import { CreepBalancer } from '../creeps/balancer';
-import { CreepBuilder } from '../creeps/builder';
-import { CreepExcavator } from '../creeps/excavator';
-import { CreepTruck } from '../creeps/truck';
-import { CreepUpgrader } from '../creeps/upgrader';
+import { BaseCreep, createName, CreepSchema, GetBodyParts, getRoleShortName } from '../helpers/creep';
+import { CreepBalancer } from '../creeps/base/balancer';
+import { CreepBuilder } from '../creeps/base/builder';
+import { CreepExcavator } from '../creeps/base/excavator';
+import { CreepTruck } from '../creeps/base/truck';
+import { CreepUpgrader } from '../creeps/base/upgrader';
 import { DrawService } from '../helpers/draw.service';
 import { WorkerRoles } from '../helpers/types';
-import { CreepScout } from '../creeps/scout';
-import { CreepTowerDrainer } from '../creeps/towerDrainer';
-import { CreepAttacker } from '../creeps/attacker';
-import { CreepDummy } from '../creeps/dummy';
+import { CreepClaimer } from '../creeps/remoteHarvesting/claimer';
+import { CreepTowerDrainer } from '../creeps/attack/towerDrainer';
+import { CreepAttacker } from '../creeps/attack/attacker';
+import { CreepDummy } from '../creeps/attack/dummy';
+import { CreepRemoteBuilder } from '../creeps/remoteHarvesting/remoteBuilder';
+import { CreepRemoteExcavator } from '../creeps/remoteHarvesting/remoteExcavator';
+import { CreepRemoteTruck } from '../creeps/remoteHarvesting/remoteTruck';
+import { CreepScout } from '../creeps/attack/scout';
+import { CreepMineralExcavator } from '../creeps/base/mineralExcavator';
+import { CreepLinker } from '../creeps/base/linker';
 
 export class SpawnController {
   private drawService = new DrawService(this.spawn.room, this.spawn.pos, 1, 0, {
@@ -43,26 +49,35 @@ export class SpawnController {
         ).toUpperCase()} 💲${cost} 💪${SpawnController.getBodyPartsDescription(bodyParts)}`
       );
     } else {
-      if (CreepTruck.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepTruck.role, CreepTruck.getBodyParts, CreepTruck.getMemory);
-      } else if (CreepExcavator.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepExcavator.role, CreepExcavator.getBodyParts, CreepExcavator.getMemory);
-      } else if (CreepBuilder.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepBuilder.role, CreepBuilder.getBodyParts, CreepBuilder.getMemory);
-      } else if (CreepBalancer.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepBalancer.role, CreepBalancer.getBodyParts, CreepBalancer.getMemory);
-      } else if (CreepUpgrader.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepUpgrader.role, CreepUpgrader.getBodyParts, CreepUpgrader.getMemory);
-      } else if (CreepScout.isNeedOfMore()) {
-        this.create(CreepScout.role, CreepScout.getBodyParts, CreepScout.getMemory);
-      } else if (CreepTowerDrainer.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepTowerDrainer.role, CreepTowerDrainer.getBodyParts, CreepTowerDrainer.getMemory);
-      } else if (CreepAttacker.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepAttacker.role, CreepAttacker.getBodyParts, CreepAttacker.getMemory);
-      } else if (CreepDummy.isNeedOfMore(this.spawn.room)) {
-        this.create(CreepDummy.role, CreepDummy.getBodyParts, CreepDummy.getMemory);
-      } else {
-        // nothing to create
+      const spawnOrder: typeof BaseCreep[] = [
+        // base
+        CreepTruck,
+        CreepExcavator,
+        CreepLinker,
+        CreepBalancer,
+        CreepBuilder,
+        CreepUpgrader,
+        CreepMineralExcavator,
+
+        // remoteHarvesting
+        CreepClaimer,
+        CreepRemoteBuilder,
+        CreepRemoteTruck,
+        CreepRemoteExcavator,
+
+        // attack
+        // CreepTowerDrainer,
+        CreepAttacker
+        // CreepDummy,
+        // CreepScout
+      ];
+      for (const creepClass of spawnOrder) {
+        const creepSchema = creepClass.isNeedOfMore(this.spawn.room);
+        if (!creepSchema) {
+          continue;
+        }
+        this.create(creepSchema);
+        break;
       }
     }
   }
@@ -84,27 +99,42 @@ export class SpawnController {
     return `${result}`;
   }
 
-  private create(
-    role: WorkerRoles,
-    getBodyPartsFn: (room: Room) => GetBodyParts,
-    getMemoryFn: (room: Room) => any
-  ): void {
+  /**
+   * Tries to create a creep by provided schema.
+   * @param creepSchema
+   * @private
+   * @returns true in case of success, false in case of failure
+   */
+  private create(creepSchema: CreepSchema): boolean {
+    const role = creepSchema.memory.role as WorkerRoles;
     const name = createName(role);
     const energyAvailable = this.spawn.room.energyAvailable; // TODO: replace with energyCapacity to produce better
     // quality creeps rather than quantity
-    const bodyParts = this.addExtraBodyParts(getBodyPartsFn(this.spawn.room), energyAvailable);
+    const bodyParts = this.addExtraBodyParts(creepSchema.bodyParts, energyAvailable);
     const cost = SpawnController.getCreepCost(bodyParts);
     // @ts-ignore
-    const spawnCreepResult = this.spawn.spawnCreep(bodyParts, name, { memory: getMemoryFn(this.spawn.room) });
+    const opts = { memory: creepSchema.memory };
+    const spawnCreepResult = this.spawn.spawnCreep(bodyParts, name, opts);
     switch (spawnCreepResult) {
       case OK:
         this.spawn.memory.spawning = { role, bodyParts, cost };
-        break;
+        return true;
       case ERR_NOT_ENOUGH_ENERGY:
-        this.drawService.draw(`🕐 ${this.energyStatus}`);
-        this.drawService.draw(`${role} - ${energyAvailable}/${cost}`);
+        this.drawService.draw(`🕐 ${role} - ${energyAvailable}/${cost}`);
         this.drawService.draw(SpawnController.getBodyPartsDescription(bodyParts));
-        break;
+        return false;
+      default:
+        console.log(
+          `SpawnController.create()`,
+          `Fail to create a creep.`,
+          JSON.stringify({
+            spawnCreepResult,
+            name,
+            bodyParts,
+            opts
+          })
+        );
+        return false;
     }
   }
 

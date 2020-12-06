@@ -2,7 +2,8 @@ interface CreepMemory {
   sourceId?: string;
   role: string;
   working?: boolean;
-  roomName?: string;
+  parentRoomName: string;
+  targetRoomName?: string;
 }
 
 interface SpawnMemory {
@@ -13,17 +14,20 @@ interface SpawnMemory {
   };
 }
 
-interface RoomMemory {
-  baseLinkId: null | Id<StructureLink>;
-}
-
 interface SourceInfo {
   isActive: boolean;
+  type: string;
+  remoteHarvestingFromRoom: null | string;
   excavatorName: null | string;
-  maxTrackMoveParts: number;
+  maxTrackCarryParts: number;
   truckNames: string[];
   linkId: null | Id<StructureLink>;
   pos: { x: number; y: number; roomName: string };
+}
+
+interface LinkMemory {
+  type: 'source' | 'base' | 'target';
+  roomName: string;
 }
 
 interface Memory {
@@ -32,6 +36,17 @@ interface Memory {
   log: any;
   sources: {
     [id: string]: SourceInfo;
+  };
+  links: {
+    [id: string]: LinkMemory;
+  };
+  remoteHarvestingInRoom: {
+    [roomName: string]: {
+      builderName: null | string;
+      isActive: boolean;
+      mainRoomName: string;
+      claimerName: null | string;
+    };
   };
 }
 
