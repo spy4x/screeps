@@ -53,6 +53,28 @@ export class CreepRemoteBuilder extends BaseCreep {
     if (this.creep.memory.working) {
       this.work();
     } else {
+      const droppedResource = this.creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+        filter: dr => dr.resourceType === RESOURCE_ENERGY && dr.amount > 300
+      });
+      if (droppedResource) {
+        this.say('💎');
+        // IMPORTANT: Track collects dropped energy from excavator. Used on low RCLs.
+        if (this.creep.pickup(droppedResource) === ERR_NOT_IN_RANGE) {
+          moveTo(this.creep, droppedResource);
+        }
+        return;
+      }
+
+      const container = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.energy > 300
+      }) as StructureContainer;
+      if (container) {
+        if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+          moveTo(this.creep, container);
+        }
+        return;
+      }
+
       const source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
       if (!source) {
         this.say('⚠️ No source');
@@ -63,7 +85,7 @@ export class CreepRemoteBuilder extends BaseCreep {
   }
 
   private work() {
-    this.repair() || this.build();
+    this.build() || this.repair();
   }
 
   private repair(): boolean {

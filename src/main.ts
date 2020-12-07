@@ -84,6 +84,7 @@ function cleanUpMemory(): void {
             source.truckNames.splice(indexOf, 1);
           }
           continue;
+        case WorkerRoles.remoteBuilder:
         case WorkerRoles.claimer:
           const targetRoomName = creepMemory.targetRoomName;
           if (!targetRoomName) {
@@ -95,6 +96,9 @@ function cleanUpMemory(): void {
           }
           if (remoteHarvestingRoomInfo.claimerName === name) {
             remoteHarvestingRoomInfo.claimerName = null;
+          }
+          if (remoteHarvestingRoomInfo.builderName === name) {
+            remoteHarvestingRoomInfo.builderName = null;
           }
           continue;
       }
@@ -118,7 +122,7 @@ function createMemorySourcesIfNeeded(): void {
     const spawn = source.pos.findClosestByRange(FIND_MY_SPAWNS);
     const maxTrackCarryParts = spawn
       ? (source instanceof Source && Math.ceil(spawn.pos.findPathTo(source).length / 4)) || 1
-      : 12;
+      : 20;
 
     Memory.sources[source.id] = {
       isActive: true,

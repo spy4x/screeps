@@ -19,7 +19,7 @@ export class CreepRemoteExcavator extends BaseCreep {
       return false;
     }
 
-    const baseBodyParts = [MOVE, WORK];
+    const baseBodyParts = [MOVE, WORK, WORK];
     return {
       memory: {
         role: CreepRemoteExcavator.role,
@@ -29,7 +29,7 @@ export class CreepRemoteExcavator extends BaseCreep {
       bodyParts: {
         base: baseBodyParts,
         extra: baseBodyParts,
-        maxExtra: 7
+        maxExtra: 3
       }
     };
   }

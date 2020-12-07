@@ -91,7 +91,7 @@ export function harvest(creep: Creep, source: Source | StructureExtractor): void
     harvestResult !== ERR_NOT_ENOUGH_RESOURCES &&
     harvestResult !== ERR_TIRED
   ) {
-    console.log('harvest(): Error:', JSON.stringify({ creep: creep.name, harvestResult }));
+    console.log(`harvest(): Error: ${creep.room.name} ${creep.name} Result: ${harvestResult}`);
   }
 }
 
@@ -201,6 +201,7 @@ export function findSilo(creep: Creep, resourceType: ResourceConstant): null | S
         structure.structureType === STRUCTURE_SPAWN ||
         structure.structureType === STRUCTURE_TOWER ||
         structure.structureType === STRUCTURE_STORAGE ||
+        structure.structureType === STRUCTURE_LINK ||
         structure.structureType === STRUCTURE_CONTAINER;
       const isSourceContainer =
         structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;

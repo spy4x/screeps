@@ -24,14 +24,14 @@ export class CreepRemoteTruck extends BaseCreep {
       return false;
     }
 
-    const baseBodyParts = [MOVE, CARRY];
+    const baseBodyParts = [MOVE, CARRY, CARRY];
     return {
       memory: {
         role: CreepRemoteTruck.role,
         parentRoomName: room.name,
         sourceId
       },
-      bodyParts: { base: baseBodyParts, extra: baseBodyParts, maxExtra: 9 }
+      bodyParts: { base: baseBodyParts, extra: baseBodyParts, maxExtra: 15 }
     };
   }
 

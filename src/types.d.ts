@@ -42,10 +42,10 @@ interface Memory {
   };
   remoteHarvestingInRoom: {
     [roomName: string]: {
-      builderName: null | string;
       isActive: boolean;
       mainRoomName: string;
       claimerName: null | string;
+      builderName: null | string;
     };
   };
 }
