@@ -72,7 +72,7 @@ export class Link {
     let type = LinkMemoryType.target;
     if (this.link.pos.findInRange(FIND_SOURCES, 2).length) {
       type = LinkMemoryType.source;
-    } else if (this.link.room.storage && this.link.pos.getRangeTo(this.link.room.storage) <= 2) {
+    } else if (this.link.room.storage && this.link.pos.getRangeTo(this.link.room.storage) <= 1) {
       type = LinkMemoryType.base;
     }
 
