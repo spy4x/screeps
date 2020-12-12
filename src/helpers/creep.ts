@@ -247,3 +247,44 @@ export class BaseCreep {
     this.drawService.draw(text, { opacity: 0.5, backgroundPadding: 0.2 });
   }
 }
+
+export interface ITruck {
+  ttlToDie: number;
+  returnToBase(): void;
+}
+
+/**
+ * Kills creep if ttl is less than provided value or 100
+ * @param creep
+ * @param ttl
+ * @returns true if creep is suiciding. Otherwise false.
+ */
+export function suicideAtTTL(creep: Creep, ttl = 100): boolean {
+  if (!creep.ticksToLive || creep.ticksToLive > ttl) {
+    return false;
+  }
+
+  creep.suicide();
+  return true;
+}
+
+/**
+ * If creep's ttl is less than provided value or 100
+ *  if it's empty - Kills creep
+ *  if it's not empty - forces creep to return to base and empty store
+ * @param creep
+ * @param ttl
+ * @returns true if creep is suiciding or moving to base. Otherwise false.
+ */
+export function preventTruckFromDyingFull(truck: BaseCreep & ITruck): boolean {
+  if (!truck.creep.ticksToLive || truck.creep.ticksToLive > truck.ttlToDie) {
+    return false;
+  }
+
+  if (truck.creep.store.getUsedCapacity() === 0) {
+    truck.creep.suicide();
+  } else {
+    truck.returnToBase();
+  }
+  return true;
+}

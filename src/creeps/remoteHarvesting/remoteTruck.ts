@@ -1,9 +1,18 @@
-import { BaseCreep, CreepSchema, findSilo, moveTo } from '../../helpers/creep';
+import {
+  BaseCreep,
+  CreepSchema,
+  findSilo,
+  ITruck,
+  moveTo,
+  preventTruckFromDyingFull,
+  suicideAtTTL
+} from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
 import { runFromHostileCreeps } from '../../helpers/runFromHostileCreeps';
 
-export class CreepRemoteTruck extends BaseCreep {
+export class CreepRemoteTruck extends BaseCreep implements ITruck {
   public static role = WorkerRoles.remoteTruck;
+  public ttlToDie = 150;
 
   public constructor(creep: Creep) {
     super(creep);
@@ -44,6 +53,10 @@ export class CreepRemoteTruck extends BaseCreep {
   }
 
   public run(): void {
+    if (preventTruckFromDyingFull(this)) {
+      return;
+    }
+
     if (runFromHostileCreeps(this)) {
       return;
     }
@@ -57,13 +70,13 @@ export class CreepRemoteTruck extends BaseCreep {
       this.say('🔙');
     }
     if (this.creep.memory.working) {
-      this.get$ToBase();
+      this.returnToBase();
     } else {
       this.get$FromSource();
     }
   }
 
-  private get$ToBase() {
+  public returnToBase(): void {
     const parentRoomName = this.creep.memory.parentRoomName;
     if (parentRoomName !== this.creep.room.name) {
       moveTo(this.creep, { pos: { x: 20, y: 20, roomName: parentRoomName } });
@@ -83,7 +96,7 @@ export class CreepRemoteTruck extends BaseCreep {
         }
       } else {
         console.log(
-          'CreepRemoteTruck.get$ToBase():',
+          'CreepRemoteTruck.returnToBase():',
           `Unexpected transfer result: ${transferResult}. ResourceType to transfer: ${resourceType}. Silo ${silo.id}`
         );
       }

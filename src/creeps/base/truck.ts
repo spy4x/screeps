@@ -1,8 +1,18 @@
-import { BaseCreep, CreepSchema, findResourceToTransfer, findSilo, moveTo, transfer } from '../../helpers/creep';
+import {
+  BaseCreep,
+  CreepSchema,
+  findResourceToTransfer,
+  findSilo,
+  ITruck,
+  moveTo,
+  preventTruckFromDyingFull,
+  transfer
+} from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
 
-export class CreepTruck extends BaseCreep {
+export class CreepTruck extends BaseCreep implements ITruck {
   public static role = WorkerRoles.truck;
+  public ttlToDie = 75;
 
   public constructor(creep: Creep) {
     super(creep);
@@ -50,6 +60,10 @@ export class CreepTruck extends BaseCreep {
   }
 
   public run(): void {
+    if (preventTruckFromDyingFull(this)) {
+      return;
+    }
+
     if (this.creep.memory.working && this.creep.store.getUsedCapacity() === 0) {
       this.creep.memory.working = false;
       this.say('🔜');
@@ -59,13 +73,13 @@ export class CreepTruck extends BaseCreep {
       this.say('🔙');
     }
     if (this.creep.memory.working) {
-      this.get$ToBase();
+      this.returnToBase();
     } else {
       this.get$FromSource();
     }
   }
 
-  private get$ToBase() {
+  public returnToBase() {
     const resourceType = findResourceToTransfer(this.creep);
     if (!resourceType) {
       return;
