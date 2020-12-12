@@ -218,7 +218,10 @@ export function findSilo(creep: Creep, resourceType: ResourceConstant): null | S
       const isMineralContainer =
         structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_MINERALS, 1).length;
       const freeCapacity = isStore && (structure as any).store.getFreeCapacity(resourceType);
-      return isStore && !isSourceContainer && !isMineralContainer && freeCapacity > 0;
+      const isTowerNotFullEnough =
+        structure.structureType !== STRUCTURE_TOWER ||
+        (structure.structureType === STRUCTURE_TOWER && freeCapacity > 200);
+      return isStore && !isSourceContainer && !isMineralContainer && freeCapacity > 0 && isTowerNotFullEnough;
     }
   });
 }
