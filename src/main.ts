@@ -53,7 +53,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   Object.values(Game.creeps).forEach(runCreep);
 
   const cpuUsed = Game.cpu.getUsed() - start;
-  if (cpuUsed > 10) {
+  if (cpuUsed > 20) {
     console.log(`CPU: ${cpuUsed.toFixed(0)}`);
   }
 });
