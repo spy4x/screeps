@@ -38,7 +38,7 @@ export class CreepTruck extends BaseCreep implements ITruck {
         parentRoomName: room.name,
         sourceId: sourceOrExtractor.id
       },
-      bodyParts: { base: bodyBase, extra: bodyBase, maxExtra: 2 }
+      bodyParts: { base: bodyBase, extra: bodyBase, maxExtra: 15 }
     };
   }
 
