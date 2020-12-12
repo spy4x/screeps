@@ -1,5 +1,6 @@
 import { BaseCreep, CreepSchema, harvest, moveTo } from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
+import { runFromHostileCreeps } from '../../helpers/runFromHostileCreeps';
 
 export class CreepRemoteExcavator extends BaseCreep {
   public static role = WorkerRoles.remoteExcavator;
@@ -35,6 +36,10 @@ export class CreepRemoteExcavator extends BaseCreep {
   }
 
   public run(): void {
+    if (runFromHostileCreeps(this)) {
+      return;
+    }
+
     const source = this.getSource();
     if (!source) {
       const sourceInfo = Memory.sources[this.creep.memory.sourceId!];

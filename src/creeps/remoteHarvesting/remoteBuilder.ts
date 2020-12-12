@@ -1,6 +1,7 @@
 import { BaseCreep, CreepSchema, harvest, moveTo } from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
 import { getRepairTarget } from '../../helpers/repair';
+import { runFromHostileCreeps } from '../../helpers/runFromHostileCreeps';
 
 export class CreepRemoteBuilder extends BaseCreep {
   public static role = WorkerRoles.remoteBuilder;
@@ -32,6 +33,10 @@ export class CreepRemoteBuilder extends BaseCreep {
   }
 
   public run(): void {
+    if (runFromHostileCreeps(this)) {
+      return;
+    }
+
     const roomName = this.creep.memory.targetRoomName;
     if (!roomName) {
       return;

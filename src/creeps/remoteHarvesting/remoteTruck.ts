@@ -1,5 +1,6 @@
 import { BaseCreep, CreepSchema, findSilo, moveTo } from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
+import { runFromHostileCreeps } from '../../helpers/runFromHostileCreeps';
 
 export class CreepRemoteTruck extends BaseCreep {
   public static role = WorkerRoles.remoteTruck;
@@ -43,6 +44,10 @@ export class CreepRemoteTruck extends BaseCreep {
   }
 
   public run(): void {
+    if (runFromHostileCreeps(this)) {
+      return;
+    }
+
     if (this.creep.memory.working && this.creep.store.getUsedCapacity() === 0) {
       this.creep.memory.working = false;
       this.say('🔜');

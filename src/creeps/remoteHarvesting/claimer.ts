@@ -1,5 +1,6 @@
 import { BaseCreep, CreepSchema, moveTo } from '../../helpers/creep';
 import { WorkerRoles } from '../../helpers/types';
+import { runFromHostileCreeps } from '../../helpers/runFromHostileCreeps';
 
 export class CreepClaimer extends BaseCreep {
   public static role = WorkerRoles.claimer;
@@ -28,6 +29,10 @@ export class CreepClaimer extends BaseCreep {
   }
 
   public run(): void {
+    if (runFromHostileCreeps(this)) {
+      return;
+    }
+
     const roomName = this.creep.memory.targetRoomName;
     if (!roomName) {
       return;
