@@ -29,6 +29,8 @@ export function getRoleShortName(role: WorkerRoles): string {
       return '🤠';
     case WorkerRoles.attacker:
       return '⚔️';
+    case WorkerRoles.remoteGuard:
+      return '💂‍♂️️️';
     case WorkerRoles.dummy:
       return '😱';
     case WorkerRoles.linker:
@@ -74,6 +76,7 @@ function getPathColorForRole(role: WorkerRoles): string {
     case WorkerRoles.towerDrainer:
       return '#FF0000'; // red
     case WorkerRoles.attacker:
+    case WorkerRoles.remoteGuard:
       return '#FF0000'; // red
     case WorkerRoles.dummy:
       return '#00ffd9'; // cyan
@@ -82,6 +85,13 @@ function getPathColorForRole(role: WorkerRoles): string {
 
 export function harvest(creep: Creep, source: Source | StructureExtractor): void {
   const target = source instanceof Source ? source : source.pos.lookFor(LOOK_MINERALS)[0];
+  const container = target.pos.findInRange(FIND_STRUCTURES, 1, {
+    filter: s => s.structureType === STRUCTURE_CONTAINER
+  })[0];
+  if (container && !creep.pos.isEqualTo(container)) {
+    moveTo(creep, container);
+    return;
+  }
   const harvestResult = creep.harvest(target);
   if (harvestResult === ERR_NOT_IN_RANGE) {
     moveTo(creep, source);

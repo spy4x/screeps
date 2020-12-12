@@ -9,9 +9,9 @@ export class CreepBalancer extends BaseCreep {
   }
 
   public static getBodyParts(): GetBodyParts {
-    const base = [MOVE, CARRY];
+    const base = [MOVE, CARRY, CARRY];
     const extra = base;
-    return { base, extra, maxExtra: 24 };
+    return { base, extra, maxExtra: 15 };
   }
 
   public static isNeedOfMore(room: Room): false | CreepSchema {

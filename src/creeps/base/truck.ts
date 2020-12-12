@@ -21,13 +21,14 @@ export class CreepTruck extends BaseCreep {
     }
 
     const bodyBase = [MOVE, CARRY, CARRY];
+    const sourceOrExtractor = [...sourcesLackingTrucks, ...extractorsLackingTrucks][0];
     return {
       memory: {
         role: CreepTruck.role,
         parentRoomName: room.name,
-        sourceId: [...sourcesLackingTrucks, ...extractorsLackingTrucks][0].id
+        sourceId: sourceOrExtractor.id
       },
-      bodyParts: { base: bodyBase, extra: bodyBase, maxExtra: 1 }
+      bodyParts: { base: bodyBase, extra: bodyBase, maxExtra: 2 }
     };
   }
 
@@ -36,7 +37,7 @@ export class CreepTruck extends BaseCreep {
       si.isActive &&
       !!si.excavatorName &&
       !si.linkId &&
-      si.truckNames.length < 4 &&
+      si.truckNames.length < 5 &&
       CreepTruck.getMovePartsAmount(si.truckNames) < si.maxTrackCarryParts
     );
   }
@@ -88,7 +89,7 @@ export class CreepTruck extends BaseCreep {
       return;
     }
 
-    const droppedResource = source.pos.findInRange(FIND_DROPPED_RESOURCES, 1)[0];
+    const droppedResource = source.pos.findInRange(FIND_DROPPED_RESOURCES, 2, { filter: dr => dr.amount > 50 })[0];
     if (droppedResource) {
       this.say('💎');
       // IMPORTANT: Track collects dropped energy from excavator. Used on low RCLs.
@@ -103,6 +104,7 @@ export class CreepTruck extends BaseCreep {
     })[0] as StructureContainer;
     if (!container || !container.store.getUsedCapacity()) {
       this.say('💤');
+      return;
     }
 
     this.say('🛒');

@@ -7,15 +7,14 @@ import { CreepUpgrader } from '../creeps/base/upgrader';
 import { DrawService } from '../helpers/draw.service';
 import { WorkerRoles } from '../helpers/types';
 import { CreepClaimer } from '../creeps/remoteHarvesting/claimer';
-import { CreepTowerDrainer } from '../creeps/attack/towerDrainer';
-import { CreepAttacker } from '../creeps/attack/attacker';
-import { CreepDummy } from '../creeps/attack/dummy';
 import { CreepRemoteBuilder } from '../creeps/remoteHarvesting/remoteBuilder';
 import { CreepRemoteExcavator } from '../creeps/remoteHarvesting/remoteExcavator';
 import { CreepRemoteTruck } from '../creeps/remoteHarvesting/remoteTruck';
-import { CreepScout } from '../creeps/attack/scout';
 import { CreepMineralExcavator } from '../creeps/base/mineralExcavator';
 import { CreepLinker } from '../creeps/base/linker';
+import { CreepRemoteGuard } from '../creeps/remoteHarvesting/remoteGuard';
+import { CreepAttacker } from '../creeps/attack/attacker';
+import { getEnergyStorageAmount } from '../helpers/room';
 
 export class SpawnController {
   private drawService = new DrawService(this.spawn.room, this.spawn.pos, 1, 0, {
@@ -25,10 +24,27 @@ export class SpawnController {
     align: 'left'
   });
   private energyStatus = `${getEnergyStatus(this.spawn.room.energyAvailable)} / ${getEnergyStatus(
-    this.spawn.room.storage?.store.energy || 0
+    getEnergyStorageAmount(this.spawn.room)
   )}`;
 
   public constructor(public spawn: StructureSpawn) {}
+
+  private static getCreepCost(bodyParts: BodyPartConstant[]): number {
+    return bodyParts.reduce((acc, cur) => acc + BODYPART_COST[cur], 0);
+  }
+
+  private static getBodyPartsDescription(bodyParts: BodyPartConstant[]): string {
+    const partsMap = bodyParts.reduce((acc, cur) => {
+      const partLetter = cur[0];
+      acc[partLetter] = acc[partLetter] ? acc[partLetter] + 1 : 1;
+      return acc;
+    }, {} as { [s: string]: number });
+    const result = Object.keys(partsMap)
+      .sort()
+      .map(partLetter => `${partLetter}${partsMap[partLetter]}`)
+      .join('');
+    return `${result}`;
+  }
 
   public run(): void {
     this.drawService.draw(
@@ -60,10 +76,11 @@ export class SpawnController {
         CreepMineralExcavator,
 
         // remoteHarvesting
-        CreepClaimer,
         CreepRemoteBuilder,
         CreepRemoteTruck,
         CreepRemoteExcavator,
+        CreepRemoteGuard,
+        CreepClaimer,
 
         // attack
         // CreepTowerDrainer,
@@ -80,23 +97,6 @@ export class SpawnController {
         break;
       }
     }
-  }
-
-  private static getCreepCost(bodyParts: BodyPartConstant[]): number {
-    return bodyParts.reduce((acc, cur) => acc + BODYPART_COST[cur], 0);
-  }
-
-  private static getBodyPartsDescription(bodyParts: BodyPartConstant[]): string {
-    const partsMap = bodyParts.reduce((acc, cur) => {
-      const partLetter = cur[0];
-      acc[partLetter] = acc[partLetter] ? acc[partLetter] + 1 : 1;
-      return acc;
-    }, {} as { [s: string]: number });
-    const result = Object.keys(partsMap)
-      .sort()
-      .map(partLetter => `${partLetter}${partsMap[partLetter]}`)
-      .join('');
-    return `${result}`;
   }
 
   /**
@@ -148,7 +148,9 @@ export class SpawnController {
     if (extraPartsAmount > prototypeBodyPartsInfo.maxExtra) {
       extraPartsAmount = prototypeBodyPartsInfo.maxExtra;
     }
-    const extraParts = new Array(extraPartsAmount).fill(prototypeBodyPartsInfo.extra).flat() as BodyPartConstant[];
+    const extraParts: BodyPartConstant[] = prototypeBodyPartsInfo.extra.length
+      ? new Array(extraPartsAmount).fill(prototypeBodyPartsInfo.extra).flat()
+      : [];
     return [...prototypeBodyPartsInfo.base, ...extraParts].slice(0, MAX_CREEP_SIZE).sort((a, b) => {
       if (a === TOUGH) {
         return -1;

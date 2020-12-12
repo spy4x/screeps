@@ -20,6 +20,7 @@ import { CreepRemoteTruck } from './creeps/remoteHarvesting/remoteTruck';
 import { CreepScout } from './creeps/attack/scout';
 import { CreepMineralExcavator } from './creeps/base/mineralExcavator';
 import { CreepLinker } from './creeps/base/linker';
+import { CreepRemoteGuard } from './creeps/remoteHarvesting/remoteGuard';
 
 if (!Game.rooms.sim) {
   console.log('------- COLD START --------');
@@ -85,6 +86,7 @@ function cleanUpMemory(): void {
           }
           continue;
         case WorkerRoles.remoteBuilder:
+        case WorkerRoles.remoteGuard:
         case WorkerRoles.claimer:
           const targetRoomName = creepMemory.targetRoomName;
           if (!targetRoomName) {
@@ -93,6 +95,9 @@ function cleanUpMemory(): void {
           const remoteHarvestingRoomInfo = Memory.remoteHarvestingInRoom[targetRoomName];
           if (!remoteHarvestingRoomInfo) {
             continue;
+          }
+          if (remoteHarvestingRoomInfo.guardName === name) {
+            remoteHarvestingRoomInfo.guardName = null;
           }
           if (remoteHarvestingRoomInfo.claimerName === name) {
             remoteHarvestingRoomInfo.claimerName = null;
@@ -174,6 +179,8 @@ function runCreep(creep: Creep): void {
       return new CreepMineralExcavator(creep).run();
     case WorkerRoles.linker:
       return new CreepLinker(creep).run();
+    case WorkerRoles.remoteGuard:
+      return new CreepRemoteGuard(creep).run();
   }
 }
 

@@ -44,6 +44,7 @@ interface Memory {
     [roomName: string]: {
       isActive: boolean;
       mainRoomName: string;
+      guardName: null | string;
       claimerName: null | string;
       builderName: null | string;
     };

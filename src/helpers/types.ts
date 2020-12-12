@@ -13,7 +13,8 @@ export enum WorkerRoles {
   remoteTruck = `remoteTruck`,
   scout = 'scout',
   mineralExcavator = 'mineralExcavator',
-  linker = 'linker'
+  linker = 'linker',
+  remoteGuard = 'remoteGuard'
 }
 
 export enum LinkMemoryType {

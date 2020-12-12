@@ -9,6 +9,13 @@ export function pickupEnergy(creep: BaseCreep): boolean {
     return false;
   }
 
+  if (store instanceof Resource) {
+    if (creep.creep.pickup(store) === ERR_NOT_IN_RANGE) {
+      moveTo(creep.creep, store);
+    }
+    return true;
+  }
+
   if (
     store.structureType !== STRUCTURE_LINK &&
     store.store.getCapacity(RESOURCE_ENERGY) >= creep.creep.store.getCapacity(RESOURCE_ENERGY) &&
@@ -25,7 +32,9 @@ export function pickupEnergy(creep: BaseCreep): boolean {
   return true;
 }
 
-function getSilo(creep: Creep): null | (Structure & { store: Store<RESOURCE_ENERGY | ResourceConstant, false> }) {
+function getSilo(
+  creep: Creep
+): null | Resource<ResourceConstant> | (Structure & { store: Store<RESOURCE_ENERGY | ResourceConstant, false> }) {
   const link = creep.pos.findInRange(FIND_MY_STRUCTURES, 3, {
     filter: s => s.structureType === STRUCTURE_LINK && Memory.links[s.id].type !== LinkMemoryType.base
   })[0] as StructureLink;
@@ -38,11 +47,17 @@ function getSilo(creep: Creep): null | (Structure & { store: Store<RESOURCE_ENER
     return storage;
   }
 
-  const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-    filter: structure => structure.structureType === STRUCTURE_CONTAINER
-  }) as StructureContainer;
-  if (container) {
-    return container;
+  const droppedResource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+    filter: dr => dr.resourceType === RESOURCE_ENERGY && dr.amount > 300
+  });
+  if (droppedResource) {
+    return droppedResource;
+  }
+
+  if (creep.room.find(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_CONTAINER })) {
+    return creep.pos.findClosestByPath(FIND_STRUCTURES, {
+      filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.energy >= 50
+    }) as StructureContainer;
   }
 
   const spawn = creep.pos.findClosestByPath(FIND_MY_SPAWNS);

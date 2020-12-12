@@ -16,7 +16,7 @@ export class CreepRemoteTruck extends BaseCreep {
         si.isActive &&
         !!si.excavatorName &&
         si.remoteHarvestingFromRoom === room.name &&
-        si.truckNames.length < 4 &&
+        si.truckNames.length < 6 &&
         CreepRemoteTruck.getMovePartsAmount(si.truckNames) < si.maxTrackCarryParts
       );
     });
@@ -97,7 +97,7 @@ export class CreepRemoteTruck extends BaseCreep {
       return;
     }
 
-    const droppedResource = source.pos.findInRange(FIND_DROPPED_RESOURCES, 3)[0];
+    const droppedResource = source.pos.findInRange(FIND_DROPPED_RESOURCES, 1, { filter: dr => dr.amount > 50 })[0];
     if (droppedResource) {
       this.say('💎');
       // IMPORTANT: Track collects dropped energy from excavator. Used on low RCLs.

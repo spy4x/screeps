@@ -11,7 +11,7 @@ export class Controller {
 
   public run(): void {
     this.drawService.draw(
-      `📶 ${(this.controller.level + this.controller.progress / this.controller.progressTotal).toFixed(2)}`
+      `📶 ${(this.controller.level + this.controller.progress / this.controller.progressTotal).toFixed(4)}`
     );
   }
 }

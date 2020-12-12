@@ -23,7 +23,7 @@ export class CreepClaimer extends BaseCreep {
         parentRoomName: room.name,
         targetRoomName
       },
-      bodyParts: { base: [MOVE, CLAIM], extra: [MOVE, CLAIM], maxExtra: 1 }
+      bodyParts: { base: [MOVE, CLAIM], extra: Math.random() > 0.7 ? [MOVE, CLAIM] : [], maxExtra: 1 }
     };
   }
 

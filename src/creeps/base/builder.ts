@@ -25,9 +25,13 @@ export class CreepBuilder extends BaseCreep {
     const creepsAmount = room.find(FIND_MY_CREEPS, {
       filter: c => c.memory.role === CreepBuilder.role && (!c.ticksToLive || c.ticksToLive > 50)
     }).length;
-    const maxByEnergy = Math.floor(getEnergyStorageAmount(room) / 2500) || 1;
+    const maxByEnergy = room.storage
+      ? Math.floor(getEnergyStorageAmount(room) / 2500) || 1
+      : Math.floor((getEnergyStorageAmount(room) || room.energyAvailable) / 100) || 1;
     const maxByContructionNeed =
-      Math.floor(constructionSites.reduce((acc, cur) => acc + cur.progressTotal - cur.progress, 0) / 5000) || 1;
+      Math.floor(
+        constructionSites.reduce((acc, cur) => acc + cur.progressTotal - cur.progress, 0) / (room.storage ? 5000 : 1000)
+      ) || 1;
     const maxCreeps = _.min([4, maxByEnergy, maxByContructionNeed]);
     if (creepsAmount >= maxCreeps) {
       return false;

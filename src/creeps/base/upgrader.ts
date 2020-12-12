@@ -17,7 +17,9 @@ export class CreepUpgrader extends BaseCreep {
     const creepsAmount = room.find(FIND_MY_CREEPS, {
       filter: c => c.memory.role === CreepUpgrader.role && (!c.ticksToLive || c.ticksToLive > 50)
     }).length;
-    const maxByEnergy = Math.floor(getEnergyStorageAmount(room) / 5000) || 1;
+    const maxByEnergy = room.storage
+      ? Math.floor(getEnergyStorageAmount(room) / 2500) || 1
+      : Math.floor((getEnergyStorageAmount(room) || room.energyAvailable) / 250) || 1;
     const maxCreeps = _.min([4, maxByEnergy]);
     if (creepsAmount >= maxCreeps) {
       return false;
@@ -25,7 +27,7 @@ export class CreepUpgrader extends BaseCreep {
 
     const base = [MOVE, CARRY, WORK];
     const extra = CreepUpgrader.getToSilo(room) > 5 ? base : [CARRY, WORK, WORK, WORK];
-    const bodyParts = { base, extra, maxExtra: getEnergyStorageAmount(room) > 10000 ? MAX_CREEP_SIZE : 2 };
+    const bodyParts = { base, extra, maxExtra: Math.floor(getEnergyStorageAmount(room) / 3000) || 1 };
 
     return {
       memory: {

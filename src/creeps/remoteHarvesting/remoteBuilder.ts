@@ -89,7 +89,11 @@ export class CreepRemoteBuilder extends BaseCreep {
   }
 
   private repair(): boolean {
-    const target = getRepairTarget(this.creep.pos, 90);
+    const target =
+      getRepairTarget(this.creep.pos, 25) ||
+      getRepairTarget(this.creep.pos, 50) ||
+      getRepairTarget(this.creep.pos, 75) ||
+      getRepairTarget(this.creep.pos, 90);
     if (!target) {
       return false;
     }

@@ -3,7 +3,11 @@
 Screeps Typescript Starter is a starting point for a Screeps AI written in Typescript. It provides everything you need to start writing your AI whilst leaving `main.ts` as empty as possible.
 
 ## Roadmap
-- Remote harvest
+- remote workers fallback to parent room to safety when agressive creeps come to the room
+- Spawn remoteGuard only when a creep with attack/rangedAttack body parts appear in the room
+- Calculate expenses and profit from remote harvesting
+- Let excavators give command to spawn trucks based on how full is container
+- Prioritise building the best excavator possible, before building anything else
 - TODOs
 - Define body parts depending on usage goal (source harvester vs mineral harvester OR huge need of builder or small need of builder)
 - Remote build

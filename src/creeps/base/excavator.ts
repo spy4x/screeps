@@ -27,7 +27,7 @@ export class CreepExcavator extends BaseCreep {
         sourceId: source.id
       },
       bodyParts: {
-        base: source.pos.findInRange(FIND_MY_STRUCTURES, 2, { filter: s => s.structureType === STRUCTURE_LINK })
+        base: source.pos.findInRange(FIND_MY_STRUCTURES, 2, { filter: s => s.structureType === STRUCTURE_LINK }).length
           ? [MOVE, CARRY, WORK, WORK]
           : [MOVE, WORK, WORK],
         extra: [MOVE, WORK, WORK],
