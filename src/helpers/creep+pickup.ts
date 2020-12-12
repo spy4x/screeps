@@ -1,7 +1,7 @@
 import { BaseCreep, moveTo } from './creep';
 import { LinkMemoryType } from './types';
 
-export function pickupEnergy(creep: BaseCreep): boolean {
+export function pickupEnergy(creep: BaseCreep, minEnergyToPickup = 0): boolean {
   const store = getSilo(creep.creep);
 
   if (!store) {
@@ -19,7 +19,7 @@ export function pickupEnergy(creep: BaseCreep): boolean {
   if (
     store.structureType !== STRUCTURE_LINK &&
     store.store.getCapacity(RESOURCE_ENERGY) >= creep.creep.store.getCapacity(RESOURCE_ENERGY) &&
-    store.store.energy < creep.creep.store.getFreeCapacity(RESOURCE_ENERGY)
+    store.store.energy < (minEnergyToPickup || creep.creep.store.getFreeCapacity(RESOURCE_ENERGY))
   ) {
     creep.say('⚠️ pickup');
     return false;

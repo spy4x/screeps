@@ -57,7 +57,7 @@ export class CreepBuilder extends BaseCreep {
     if (this.creep.memory.working) {
       this.work();
     } else {
-      pickupEnergy(this);
+      pickupEnergy(this, 50);
     }
   }
 
