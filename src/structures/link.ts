@@ -69,13 +69,12 @@ export class Link {
     }
 
     // Need to define memory
-    const type = this.link.pos.findInRange(FIND_SOURCES, 2).length
-      ? LinkMemoryType.source
-      : this.link.pos.findInRange(FIND_MY_STRUCTURES, 2, {
-          filter: { structureType: STRUCTURE_STORAGE }
-        }).length
-      ? LinkMemoryType.base
-      : LinkMemoryType.target;
+    let type = LinkMemoryType.target;
+    if (this.link.pos.findInRange(FIND_SOURCES, 2).length) {
+      type = LinkMemoryType.source;
+    } else if (this.link.room.storage && this.link.pos.getRangeTo(this.link.room.storage) <= 2) {
+      type = LinkMemoryType.base;
+    }
 
     memory = { type, roomName: this.link.room.name };
     Memory.links[this.link.id] = memory;
