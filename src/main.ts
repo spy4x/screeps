@@ -21,6 +21,7 @@ import { CreepScout } from './creeps/attack/scout';
 import { CreepMineralExcavator } from './creeps/base/mineralExcavator';
 import { CreepLinker } from './creeps/base/linker';
 import { CreepRemoteGuard } from './creeps/remoteHarvesting/remoteGuard';
+import { CreepFlagBuilder } from './creeps/flag/builder';
 
 if (!Game.rooms.sim) {
   console.log('------- COLD START --------');
@@ -169,6 +170,8 @@ function runCreep(creep: Creep): void {
       return new CreepDummy(creep).run();
     case WorkerRoles.remoteBuilder:
       return new CreepRemoteBuilder(creep).run();
+    case WorkerRoles.flagBuilder:
+      return new CreepFlagBuilder(creep).run();
     case WorkerRoles.remoteExcavator:
       return new CreepRemoteExcavator(creep).run();
     case WorkerRoles.remoteTruck:

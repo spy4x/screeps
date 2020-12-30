@@ -72,7 +72,7 @@ export class Link {
     let type = LinkMemoryType.target;
     if (this.link.pos.findInRange(FIND_SOURCES, 2).length) {
       type = LinkMemoryType.source;
-    } else if (this.link.room.storage && this.link.pos.getRangeTo(this.link.room.storage) <= 1) {
+    } else if (this.link.room.storage && this.link.pos.getRangeTo(this.link.room.storage) <= 2) {
       type = LinkMemoryType.base;
     }
 
@@ -124,7 +124,7 @@ export class Link {
    */
   private updateSourceInfoIfNeeded(): void {
     const source = this.link.pos.findInRange(FIND_SOURCES, 2)[0];
-    const sourceInfo = Memory.sources[source.id];
+    const sourceInfo = Memory.sources[source?.id];
     if (!sourceInfo) {
       return;
     }

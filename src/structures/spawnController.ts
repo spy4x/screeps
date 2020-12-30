@@ -15,6 +15,7 @@ import { CreepLinker } from '../creeps/base/linker';
 import { CreepRemoteGuard } from '../creeps/remoteHarvesting/remoteGuard';
 import { CreepAttacker } from '../creeps/attack/attacker';
 import { getEnergyStorageAmount } from '../helpers/room';
+import { CreepFlagBuilder } from '../creeps/flag/builder';
 
 export class SpawnController {
   private drawService = new DrawService(this.spawn.room, this.spawn.pos, 1, 0, {
@@ -75,11 +76,14 @@ export class SpawnController {
         CreepUpgrader,
         CreepMineralExcavator,
 
+        // flag
+        CreepFlagBuilder,
+
         // remoteHarvesting
-        CreepRemoteBuilder,
-        CreepRemoteTruck,
-        CreepRemoteExcavator,
         CreepRemoteGuard,
+        CreepRemoteExcavator,
+        CreepRemoteTruck,
+        CreepRemoteBuilder,
         CreepClaimer,
 
         // attack

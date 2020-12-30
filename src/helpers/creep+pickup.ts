@@ -1,5 +1,5 @@
 import { BaseCreep, moveTo } from './creep';
-import { LinkMemoryType } from './types';
+import { LinkMemoryType, WorkerRoles } from './types';
 
 export function pickupEnergy(creep: BaseCreep, minEnergyToPickup = 0): boolean {
   const store = getSilo(creep.creep);
@@ -35,29 +35,43 @@ export function pickupEnergy(creep: BaseCreep, minEnergyToPickup = 0): boolean {
 function getSilo(
   creep: Creep
 ): null | Resource<ResourceConstant> | (Structure & { store: Store<RESOURCE_ENERGY | ResourceConstant, false> }) {
+  if (creep.memory.role === WorkerRoles.flagBuilder) {
+    if (creep.room.terminal && creep.room.terminal.store.energy > 3000) {
+      return creep.room.terminal;
+    }
+    if (creep.room.storage && creep.room.storage.store.energy > 3000) {
+      return creep.room.storage;
+    }
+  }
+  if (creep.room.storage && creep.pos.getRangeTo(creep.room.storage) <= 3) {
+    // to prevent conflict with link at the same distance
+    return creep.room.storage;
+  }
+
   const link = creep.pos.findInRange(FIND_MY_STRUCTURES, 3, {
-    filter: s => s.structureType === STRUCTURE_LINK && Memory.links[s.id].type !== LinkMemoryType.base
+    filter: s =>
+      s.structureType === STRUCTURE_LINK &&
+      Memory.links[s.id].type !== LinkMemoryType.base &&
+      Memory.links[s.id].type !== LinkMemoryType.source
   })[0] as StructureLink;
   if (link) {
     return link;
   }
 
-  const storage = creep.room.storage;
-  if (storage) {
-    return storage;
+  const containerOrStorage = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+    filter: s =>
+      (s.structureType === STRUCTURE_CONTAINER && s.store.energy >= 50) ||
+      (s.structureType === STRUCTURE_STORAGE && s.store.energy >= 10000)
+  }) as StructureContainer | StructureStorage;
+  if (containerOrStorage) {
+    return containerOrStorage;
   }
 
   const droppedResource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
-    filter: dr => dr.resourceType === RESOURCE_ENERGY && dr.amount > 300
+    filter: dr => dr.resourceType === RESOURCE_ENERGY && dr.amount > 200
   });
   if (droppedResource) {
     return droppedResource;
-  }
-
-  if (creep.room.find(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_CONTAINER })) {
-    return creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.energy >= 50
-    }) as StructureContainer;
   }
 
   const spawn = creep.pos.findClosestByPath(FIND_MY_SPAWNS);

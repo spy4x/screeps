@@ -9,6 +9,8 @@ export function getRoleShortName(role: WorkerRoles): string {
       return '👷';
     case WorkerRoles.remoteBuilder:
       return '🚀👷';
+    case WorkerRoles.flagBuilder:
+      return '🚩👷';
     case WorkerRoles.upgrader:
       return '⚡';
     case WorkerRoles.excavator:
@@ -66,6 +68,7 @@ function getPathColorForRole(role: WorkerRoles): string {
       return '#ea00ff'; // violet
     case WorkerRoles.builder:
     case WorkerRoles.remoteBuilder:
+    case WorkerRoles.flagBuilder:
       return '#0062ff'; // blue
     case WorkerRoles.balancer:
     case WorkerRoles.linker:

@@ -18,16 +18,16 @@ export class CreepUpgrader extends BaseCreep {
       filter: c => c.memory.role === CreepUpgrader.role && (!c.ticksToLive || c.ticksToLive > 50)
     }).length;
     const maxByEnergy = room.storage
-      ? Math.floor(getEnergyStorageAmount(room) / 2500) || 1
+      ? Math.floor(getEnergyStorageAmount(room) / 10000) || 1
       : Math.floor((getEnergyStorageAmount(room) || room.energyAvailable) / 250) || 1;
-    const maxCreeps = _.min([4, maxByEnergy]);
+    const maxCreeps = _.min([3, maxByEnergy]);
     if (creepsAmount >= maxCreeps) {
       return false;
     }
 
     const base = [MOVE, CARRY, WORK];
     const extra = CreepUpgrader.getToSilo(room) > 5 ? base : [CARRY, WORK, WORK, WORK];
-    const bodyParts = { base, extra, maxExtra: Math.floor(getEnergyStorageAmount(room) / 3000) || 1 };
+    const bodyParts = { base, extra, maxExtra: Math.floor(getEnergyStorageAmount(room) / 2000) || 1 };
 
     return {
       memory: {

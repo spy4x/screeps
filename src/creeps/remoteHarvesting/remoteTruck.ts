@@ -39,7 +39,8 @@ export class CreepRemoteTruck extends BaseCreep implements ITruck {
       memory: {
         role: CreepRemoteTruck.role,
         parentRoomName: room.name,
-        sourceId
+        sourceId,
+        targetRoomName: Memory.sources[sourceId].pos.roomName
       },
       bodyParts: { base: baseBodyParts, extra: baseBodyParts, maxExtra: 15 }
     };

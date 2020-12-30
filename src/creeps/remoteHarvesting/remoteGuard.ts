@@ -17,13 +17,44 @@ export class CreepRemoteGuard extends BaseCreep {
       return false;
     }
 
+    const targetRoom = Game.rooms[targetRoomName];
+    if (targetRoom) {
+      const isHostileCreepInTheRoom =
+        targetRoom.find(FIND_HOSTILE_CREEPS, {
+          filter: c => c.body.find(b => b.type === ATTACK || (b.type === RANGED_ATTACK && b.hits > 0))
+        }).length > 0;
+      if (!isHostileCreepInTheRoom) {
+        const isHostileBuildingInTheRoom = targetRoom.find(FIND_HOSTILE_STRUCTURES).length > 0;
+        if (!isHostileBuildingInTheRoom) {
+          return false;
+        }
+      }
+    }
+    const base = [
+      TOUGH,
+      TOUGH,
+      TOUGH,
+      TOUGH,
+      ATTACK,
+      ATTACK,
+      ATTACK,
+      ATTACK,
+      MOVE,
+      MOVE,
+      MOVE,
+      MOVE,
+      MOVE,
+      MOVE,
+      MOVE,
+      MOVE
+    ];
     return {
       memory: {
         role: CreepRemoteGuard.role,
         parentRoomName: room.name,
         targetRoomName
       },
-      bodyParts: { base: [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, ATTACK, MOVE], extra: [], maxExtra: 0 }
+      bodyParts: { base, extra: [], maxExtra: 0 }
     };
   }
 

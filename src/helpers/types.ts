@@ -14,7 +14,8 @@ export enum WorkerRoles {
   scout = 'scout',
   mineralExcavator = 'mineralExcavator',
   linker = 'linker',
-  remoteGuard = 'remoteGuard'
+  remoteGuard = 'remoteGuard',
+  flagBuilder = 'flagBuilder'
 }
 
 export enum LinkMemoryType {

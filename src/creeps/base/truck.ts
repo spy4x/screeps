@@ -48,11 +48,11 @@ export class CreepTruck extends BaseCreep implements ITruck {
       !!si.excavatorName &&
       !si.linkId &&
       si.truckNames.length < 5 &&
-      CreepTruck.getMovePartsAmount(si.truckNames) < si.maxTrackCarryParts
+      CreepTruck.getCarryPartsAmount(si.truckNames) < si.maxTrackCarryParts
     );
   }
 
-  private static getMovePartsAmount(trackNames: string[]): number {
+  private static getCarryPartsAmount(trackNames: string[]): number {
     return trackNames.reduce(
       (acc, cur) => (Game.creeps[cur] ? acc + Game.creeps[cur].body.filter(bp => bp.type === CARRY).length : acc),
       0

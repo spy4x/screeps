@@ -69,16 +69,18 @@ export class CreepBalancer extends BaseCreep {
   }
 
   private withdrawFromStorage() {
-    const closestStore = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      filter: structure => {
-        const isStore =
-          structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_CONTAINER;
-        const isSourceContainer =
-          structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        return isStore && !isSourceContainer && (structure as any).store.energy > 0;
-      }
-    });
+    const closestStore =
+      this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: structure => {
+          const isStore =
+            structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_CONTAINER;
+          const isSourceContainer =
+            structure.structureType === STRUCTURE_CONTAINER && structure.pos.findInRange(FIND_SOURCES, 1).length;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          return isStore && !isSourceContainer && (structure as any).store.energy > 0;
+        }
+      }) ||
+      (this.creep.room.terminal && this.creep.room.terminal.store.energy > 17000 ? this.creep.room.terminal : null);
 
     if (!closestStore) {
       this.say('💤');
@@ -96,9 +98,13 @@ export class CreepBalancer extends BaseCreep {
         if (
           structure.structureType !== STRUCTURE_TOWER &&
           structure.structureType !== STRUCTURE_SPAWN &&
-          structure.structureType !== STRUCTURE_EXTENSION
+          structure.structureType !== STRUCTURE_EXTENSION &&
+          structure.structureType !== STRUCTURE_TERMINAL
         ) {
           return false;
+        }
+        if (structure.structureType === STRUCTURE_TERMINAL) {
+          return structure.store.getUsedCapacity(RESOURCE_ENERGY) < 15000;
         }
         const capacity = structure.store.getCapacity(RESOURCE_ENERGY);
         const usedCapacity = structure.store.getUsedCapacity(RESOURCE_ENERGY);

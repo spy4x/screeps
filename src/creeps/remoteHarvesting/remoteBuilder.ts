@@ -18,6 +18,9 @@ export class CreepRemoteBuilder extends BaseCreep {
     if (!targetRoomName) {
       return false;
     }
+    if (Math.random() > 0.05) {
+      return false;
+    }
 
     const baseBodyParts = [MOVE, CARRY, WORK];
     const bodyParts = { base: baseBodyParts, extra: baseBodyParts, maxExtra: 4 };
@@ -80,6 +83,12 @@ export class CreepRemoteBuilder extends BaseCreep {
         return;
       }
 
+      const doesContainerExist =
+        this.creep.room.find(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_CONTAINER }).length > 0;
+      if (doesContainerExist) {
+        return;
+      }
+
       const source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
       if (!source) {
         this.say('⚠️ No source');
@@ -98,7 +107,7 @@ export class CreepRemoteBuilder extends BaseCreep {
       getRepairTarget(this.creep.pos, 25) ||
       getRepairTarget(this.creep.pos, 50) ||
       getRepairTarget(this.creep.pos, 75) ||
-      getRepairTarget(this.creep.pos, 90);
+      getRepairTarget(this.creep.pos, 100);
     if (!target) {
       return false;
     }

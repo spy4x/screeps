@@ -25,7 +25,8 @@ export class CreepRemoteExcavator extends BaseCreep {
       memory: {
         role: CreepRemoteExcavator.role,
         parentRoomName: room.name,
-        sourceId
+        sourceId,
+        targetRoomName: Memory.sources[sourceId].pos.roomName
       },
       bodyParts: {
         base: baseBodyParts,
